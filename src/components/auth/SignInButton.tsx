@@ -47,8 +47,21 @@ export default function AuthSignInButton() {
       </Button>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center" style={{ padding: '1rem' }}>
-          <div className="bg-neutral-900 rounded-xl border border-white/10 p-6 w-full max-w-md mx-auto">
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm" 
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            padding: '16px',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0
+          }}
+        >
+          <div className="bg-neutral-900 rounded-xl border border-white/10 p-6 w-full max-w-md" style={{ margin: 'auto' }}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">
                 {isSignUp ? 'Create Account' : 'Sign In'}
