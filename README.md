@@ -19,7 +19,7 @@ A real-time audio-reactive visual application that transforms music into stunnin
 - **Graphics**: Canvas 2D API, Three.js
 - **Payments**: Stripe
 - **Video Processing**: Cloudinary
-- **Authentication**: Clerk
+- **Authentication**: Supabase
 - **State Management**: Zustand
 
 ## 📦 Installation
