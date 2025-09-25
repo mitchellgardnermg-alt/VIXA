@@ -250,6 +250,34 @@ export default function App() {
     recordedChunksRef.current = [];
   }
 
+  // Show loading spinner while checking authentication
+  if (loading) {
+    return (
+      <div className="h-screen bg-[#0A0F0C] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white/60">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to sign-in if not authenticated
+  if (!isSignedIn) {
+    return (
+      <div className="h-screen bg-[#0A0F0C] flex items-center justify-center">
+        <div className="text-center max-w-md mx-4">
+          <Logo className="h-16 w-16 mx-auto mb-6" />
+          <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
+            VIXA
+          </h1>
+          <p className="text-white/70 mb-8">Please sign in to access the visual mixer</p>
+          <AuthSignInButton />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen overflow-hidden bg-[#0A0F0C] text-[#E6F1EE]">
       <header className="sticky top-0 z-10 px-4 pt-3 pb-2">
