@@ -48,7 +48,7 @@ export default function AuthSignInButton() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-neutral-900 rounded-xl border border-white/10 p-6 w-full max-w-md">
+          <div className="bg-neutral-900 rounded-xl border border-white/10 p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">
                 {isSignUp ? 'Create Account' : 'Sign In'}
