@@ -283,97 +283,67 @@ export default function App() {
   return (
     <div className="h-screen overflow-hidden bg-[#0A0F0C] text-[#E6F1EE]">
       <header className="sticky top-0 z-10 px-4 pt-3 pb-2">
-        <div className="w-full rounded-xl border border-white/10 bg-[rgba(10,12,11,0.6)] backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.35)] p-3">
-          {/* Top Row - Branding and User Info */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <Logo className="h-7 w-7" />
-              <div className="text-lg font-semibold tracking-wide">VIXA</div>
-              {isSignedIn && (
-                <>
-                  <Separator.Root className="h-4 w-px bg-white/10" decorative orientation="vertical" />
-                  <div className="text-sm text-white/70 hidden sm:block">
-                    Welcome, {user?.email?.split('@')[0]}
-                  </div>
-                </>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-3">
-              {/* Subscription Status - Compact */}
-              {subscription && (
-                <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                  <StarIcon className="w-4 h-4 text-yellow-500" />
-                  <span className="capitalize font-medium">{subscription.tier}</span>
-                  {getRemainingExports() !== -1 ? (
-                    <span className="text-white/60 hidden lg:inline">
-                      ({getRemainingExports()} left)
-                    </span>
-                  ) : (
-                    <span className="text-green-500 hidden lg:inline">∞</span>
-                  )}
-                </div>
-              )}
-
-              {isSignedIn ? (
-                <div className="flex items-center gap-2">
-                  <ProfileMenu />
-                  <AuthUserButton />
-                </div>
-              ) : (
-                <AuthSignInButton />
-              )}
-            </div>
-          </div>
-
-          {/* Bottom Row - Controls */}
+        <div className="w-full rounded-xl border border-white/10 bg-[rgba(10,12,11,0.6)] backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.35)] px-4 py-2">
           <div className="flex items-center justify-between gap-4">
-            {/* Left: Media Controls */}
-            <div className="flex items-center gap-2">
+            {/* Left: Branding */}
+            <div className="flex items-center gap-3">
+              <Logo className="h-6 w-6" />
+              <div className="text-base font-semibold tracking-wide">VIXA</div>
+            </div>
+
               <input ref={fileRef} type="file" accept="audio/mp3,.mp3" className="hidden" onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) playFile(f);
               }} />
               <Button variant="primary" size="sm" onClick={() => fileRef.current?.click()}>
-                <UploadIcon className="w-4 h-4 mr-1.5" /> Load
+                <UploadIcon className="w-4 h-4 mr-1" /> Load
               </Button>
               {isPlaying ? (
                 <Button variant="subtle" size="sm" onClick={pause}>
-                  <PauseIcon className="w-4 h-4 mr-1.5" /> Pause
+                  <PauseIcon className="w-4 h-4 mr-1" /> Pause
                 </Button>
               ) : (
                 <Button variant="subtle" size="sm" onClick={resume}>
-                  <PlayIcon className="w-4 h-4 mr-1.5" /> Play
+                  <PlayIcon className="w-4 h-4 mr-1" /> Play
                 </Button>
               )}
-            </div>
-
-            {/* Center: Recording */}
-            <div className="flex items-center gap-2">
               {isRecording ? (
                 <Button variant="danger" size="sm" onClick={stopRecording}>
-                  <DotFilledIcon className="w-4 h-4 mr-1.5" /> Stop Recording
+                  <DotFilledIcon className="w-4 h-4 mr-1" /> Stop
                 </Button>
               ) : isRemuxing ? (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <div className="text-xs text-white/70">Converting...</div>
-                  <div className="w-24 bg-white/10 rounded-full h-2">
+                  <div className="w-16 bg-white/10 rounded-full h-1.5">
                     <div 
-                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                      className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
                       style={{ width: `${conversionProgress}%` }}
                     />
                   </div>
-                  <div className="text-xs text-white/70">{conversionProgress}%</div>
                 </div>
               ) : (
                 <Button variant="secondary" size="sm" onClick={startRecording} disabled={!hasInput}>
-                  <DotFilledIcon className="w-4 h-4 mr-1.5" /> Record
+                  <DotFilledIcon className="w-4 h-4 mr-1" /> Rec
                 </Button>
               )}
             </div>
 
-            {/* Right: Settings */}
+            {/* Right: Settings and User */}
             <div className="flex items-center gap-2">
+              {/* Subscription Status - Compact */}
+              {subscription && (
+                <div className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-white/5 border border-white/10">
+                  <StarIcon className="w-3 h-3 text-yellow-500" />
+                  <span className="capitalize font-medium">{subscription.tier}</span>
+                  {getRemainingExports() !== -1 ? (
+                    <span className="text-white/60 hidden md:inline">
+                      ({getRemainingExports()})
+                    </span>
+                  ) : (
+                    <span className="text-green-500 hidden md:inline">∞</span>
+                  )}
+                </div>
+              )}
               {/* Export settings */}
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
@@ -502,11 +472,20 @@ export default function App() {
               </DropdownMenu.Content>
             </DropdownMenu.Root>
 
+              {/* User Controls */}
+              {isSignedIn ? (
+                <div className="flex items-center gap-2">
+                  <ProfileMenu />
+                  <AuthUserButton />
+                </div>
+              ) : (
+                <AuthSignInButton />
+              )}
             </div>
           </div>
         </div>
       </header>
-      <div className="grid grid-cols-[minmax(0,1fr)_360px] gap-0 h-[calc(100vh-76px)]">
+      <div className="grid grid-cols-[minmax(0,1fr)_360px] gap-0 h-[calc(100vh-56px)]">
         <div className="relative">
           <div className="w-full h-full">
             <OptimizedCanvas width={1280} height={720} data={data} palette={palette} onCanvasReady={(c) => { canvasRef.current = c; }} paused={showPreview} />
