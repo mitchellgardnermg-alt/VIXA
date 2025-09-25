@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useUser } from '@clerk/nextjs';
+import { useAuth } from '@/contexts/AuthContext';
 import { useAudioAnalyser } from "@/hooks/useAudioAnalyser";
 import OptimizedCanvas from "@/components/OptimizedCanvas";
 import Mixer from "@/components/Mixer";
@@ -18,7 +18,8 @@ import Logo from "@/components/Logo";
 import PricingModal from "@/components/PricingModal";
 
 export default function App() {
-  const { isSignedIn, user } = useUser();
+  const { user, loading } = useAuth();
+  const isSignedIn = !!user;
   const { data, playMic, playFile, isPlaying, pause, resume, hasInput, getOutputStream } = useAudioAnalyser();
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [palette] = useState(["#071923", "#00BBF9", "#00F5D4", "#E0FBFC"]);

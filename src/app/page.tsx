@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import Logo from '@/components/Logo';
@@ -10,7 +10,8 @@ import AuthUserButton from '@/components/auth/UserButton';
 import { SpeakerLoudIcon, UploadIcon, PlayIcon, PauseIcon, DotFilledIcon, ImageIcon, BackpackIcon, StarIcon, CheckIcon } from '@radix-ui/react-icons';
 
 export default function Home() {
-  const { isSignedIn } = useUser();
+  const { user, loading } = useAuth();
+  const isSignedIn = !!user;
   const router = useRouter();
 
   useEffect(() => {

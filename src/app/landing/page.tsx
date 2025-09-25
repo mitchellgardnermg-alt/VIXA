@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from '@clerk/nextjs';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import AuthSignInButton from '@/components/auth/SignInButton';
@@ -9,7 +9,8 @@ import Logo from '@/components/Logo';
 import { SpeakerLoudIcon, UploadIcon, PlayIcon, PauseIcon, DotFilledIcon, ImageIcon, BackpackIcon, StarIcon, CheckIcon } from '@radix-ui/react-icons';
 
 export default function LandingPage() {
-  const { isSignedIn } = useUser();
+  const { user, loading } = useAuth();
+  const isSignedIn = !!user;
   const router = useRouter();
 
   const features = [

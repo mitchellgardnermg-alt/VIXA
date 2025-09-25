@@ -1,12 +1,13 @@
 "use client";
 
-import { useUser } from '@clerk/nextjs';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import PricingCard from '@/components/pricing/PricingCard';
 import { Button } from '@/components/ui/Button';
 
 export default function PricingPage() {
-  const { isSignedIn } = useUser();
+  const { user, loading } = useAuth();
+  const isSignedIn = !!user;
   const router = useRouter();
 
   const handleSelectPlan = (plan: string) => {
