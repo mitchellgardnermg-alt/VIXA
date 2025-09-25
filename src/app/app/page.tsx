@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useUser } from '@/lib/auth';
+import { useUser } from '@clerk/nextjs';
 import { useAudioAnalyser } from "@/hooks/useAudioAnalyser";
 import OptimizedCanvas from "@/components/OptimizedCanvas";
 import Mixer from "@/components/Mixer";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from '@/lib/auth';
+import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import PricingCard from '@/components/pricing/PricingCard';
 import { Button } from '@/components/ui/Button';

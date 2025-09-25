@@ -1,6 +1,6 @@
 "use client";
 
-import { UserButton } from '@/lib/auth';
+import { UserButton } from '@clerk/nextjs';
 
 export default function AuthUserButton() {
   return (
