@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInButton } from '@clerk/nextjs';
+import { SignInButton } from '@/lib/auth';
 import { Button } from '@/components/ui/Button';
 
 export default function AuthSignInButton() {

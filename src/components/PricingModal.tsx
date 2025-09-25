@@ -5,7 +5,7 @@ import { SUBSCRIPTION_PLANS, SubscriptionTier } from '@/lib/subscription';
 import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 import { Button } from '@/components/ui/Button';
 import { CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
-import { useUser } from '@clerk/nextjs';
+// import { useUser } from '@clerk/nextjs';
 
 interface PricingModalProps {
   isOpen: boolean;
@@ -14,7 +14,7 @@ interface PricingModalProps {
 
 export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
   const { setSubscription } = useSubscriptionStore();
-  const { user } = useUser();
+  // const { user } = useUser();
   const [loading, setLoading] = useState<SubscriptionTier | null>(null);
 
   const handleSelectPlan = async (tier: SubscriptionTier) => {
@@ -39,10 +39,10 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          plan: tier,
-          email: user?.emailAddresses[0]?.emailAddress,
-        }),
+            body: JSON.stringify({
+              plan: tier,
+              email: 'user@example.com', // Placeholder email
+            }),
       });
 
       const { url } = await response.json();

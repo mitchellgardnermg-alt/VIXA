@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from '@clerk/nextjs';
+import { useUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import AuthSignInButton from '@/components/auth/SignInButton';
