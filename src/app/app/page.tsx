@@ -292,7 +292,7 @@ export default function App() {
           <div className="flex items-center gap-2">
             {isSignedIn ? (
               <div className="hidden md:flex items-center gap-2 text-sm text-white/70">
-                <span>Welcome, {user?.firstName || user?.emailAddresses[0]?.emailAddress}</span>
+                <span>Welcome, {user?.email}</span>
               </div>
             ) : null}
           </div>
