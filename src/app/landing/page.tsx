@@ -1,23 +1,16 @@
 "use client";
 
-import { useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
-import Logo from '@/components/Logo';
 import AuthSignInButton from '@/components/auth/SignInButton';
 import AuthUserButton from '@/components/auth/UserButton';
+import Logo from '@/components/Logo';
 import { SpeakerLoudIcon, UploadIcon, PlayIcon, PauseIcon, DotFilledIcon, ImageIcon, BackpackIcon, StarIcon, CheckIcon } from '@radix-ui/react-icons';
 
-export default function Home() {
+export default function LandingPage() {
   const { isSignedIn } = useUser();
   const router = useRouter();
-
-  useEffect(() => {
-    if (isSignedIn) {
-      router.push('/app');
-    }
-  }, [isSignedIn, router]);
 
   const features = [
     {
@@ -75,7 +68,7 @@ export default function Home() {
           <div className="flex items-center gap-4">
             {isSignedIn ? (
               <div className="flex items-center gap-4">
-                <Button variant="outline" size="md" onClick={() => router.push('/app')}>
+                <Button variant="outline" onClick={() => router.push('/')}>
                   Go to App
                 </Button>
                 <AuthUserButton />
@@ -83,7 +76,7 @@ export default function Home() {
             ) : (
               <div className="flex items-center gap-3">
                 <AuthSignInButton />
-                <Button variant="primary" size="md" onClick={() => router.push('/app')}>
+                <Button variant="primary" onClick={() => router.push('/')}>
                   Try Free
                 </Button>
               </div>
@@ -114,7 +107,7 @@ export default function Home() {
               variant="primary" 
               size="lg" 
               className="text-lg px-8 py-4"
-              onClick={() => router.push('/app')}
+              onClick={() => router.push('/')}
             >
               Start Creating Free
             </Button>
@@ -204,7 +197,7 @@ export default function Home() {
               variant="primary" 
               size="lg" 
               className="text-lg px-8 py-4"
-              onClick={() => router.push('/app')}
+              onClick={() => router.push('/')}
             >
               Start Free Now
             </Button>
@@ -242,3 +235,5 @@ export default function Home() {
     </div>
   );
 }
+
+
