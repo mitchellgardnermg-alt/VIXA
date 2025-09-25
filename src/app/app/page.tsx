@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useAuth } from '@/contexts/AuthContext';
 import { useAudioAnalyser } from "@/hooks/useAudioAnalyser";
 import OptimizedCanvas from "@/components/OptimizedCanvas";
@@ -42,14 +42,16 @@ export default function App() {
   const { subscription, canExport, getRemainingExports, incrementExportUsage, setSubscription } = useSubscriptionStore();
 
   // Initialize free subscription if none exists
-  if (!subscription && isSignedIn) {
-    setSubscription({
-      tier: 'free',
-      startDate: new Date(),
-      dailyExportsUsed: 0,
-      lastResetDate: new Date().toISOString().split('T')[0]
-    });
-  }
+  useEffect(() => {
+    if (!subscription && isSignedIn) {
+      setSubscription({
+        tier: 'free',
+        startDate: new Date(),
+        dailyExportsUsed: 0,
+        lastResetDate: new Date().toISOString().split('T')[0]
+      });
+    }
+  }, [subscription, isSignedIn, setSubscription]);
 
   // Export settings
   const [exportWidth, setExportWidth] = useState<number>(1280);
