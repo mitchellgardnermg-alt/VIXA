@@ -283,83 +283,102 @@ export default function App() {
   return (
     <div className="h-screen overflow-hidden bg-[#0A0F0C] text-[#E6F1EE]">
       <header className="sticky top-0 z-10 px-4 pt-3 pb-2">
-        <div className="w-full rounded-xl border border-white/10 bg-[rgba(10,12,11,0.6)] backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.35)] px-3 py-2 flex items-center gap-3">
-          <div className="flex items-center gap-2 pr-2">
-            <Logo className="h-8 w-8" />
-            <div className="text-base font-semibold tracking-wide">VIXA</div>
-          </div>
-          <Separator.Root className="h-6 w-px bg-white/10" decorative orientation="vertical" />
-          <div className="flex items-center gap-2">
-            {isSignedIn ? (
-              <div className="hidden md:flex items-center gap-2 text-sm text-white/70">
-                <span>Welcome, {user?.email}</span>
-              </div>
-            ) : null}
-          </div>
-          <div className="ml-auto" />
-          <div className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-2 py-1">
-            <input ref={fileRef} type="file" accept="audio/mp3,.mp3" className="hidden" onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) playFile(f);
-            }} />
-            <Button variant="primary" size="md" onClick={() => fileRef.current?.click()}>
-              <UploadIcon className="mr-2 h-4 w-4" /> Load
-            </Button>
-            {isPlaying ? (
-              <Button variant="subtle" size="md" onClick={pause}>
-                <PauseIcon className="mr-2 h-4 w-4" /> Pause
-              </Button>
-            ) : (
-              <Button variant="subtle" size="md" onClick={resume}>
-                <PlayIcon className="mr-2 h-4 w-4" /> Play
-              </Button>
-            )}
-            {isRecording ? (
-              <Button variant="danger" size="md" onClick={stopRecording}>
-                <DotFilledIcon className="mr-2 h-4 w-4" /> Stop
-              </Button>
-            ) : isRemuxing ? (
-              <div className="flex flex-col items-center gap-2">
-                <Button variant="secondary" size="md" disabled>
-                  <DotFilledIcon className="mr-2 h-4 w-4" /> Converting...
-                </Button>
-                <div className="w-32 bg-white/10 rounded-full h-2">
-                  <div 
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${conversionProgress}%` }}
-                  />
+        <div className="w-full rounded-xl border border-white/10 bg-[rgba(10,12,11,0.6)] backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.35)] p-3">
+          {/* Top Row - Branding and User Info */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <Logo className="h-7 w-7" />
+              <div className="text-lg font-semibold tracking-wide">VIXA</div>
+              {isSignedIn && (
+                <>
+                  <Separator.Root className="h-4 w-px bg-white/10" decorative orientation="vertical" />
+                  <div className="text-sm text-white/70 hidden sm:block">
+                    Welcome, {user?.email?.split('@')[0]}
+                  </div>
+                </>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-3">
+              {/* Subscription Status - Compact */}
+              {subscription && (
+                <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                  <StarIcon className="w-4 h-4 text-yellow-500" />
+                  <span className="capitalize font-medium">{subscription.tier}</span>
+                  {getRemainingExports() !== -1 ? (
+                    <span className="text-white/60 hidden lg:inline">
+                      ({getRemainingExports()} left)
+                    </span>
+                  ) : (
+                    <span className="text-green-500 hidden lg:inline">∞</span>
+                  )}
                 </div>
-                <div className="text-xs opacity-70">{conversionProgress}%</div>
-              </div>
-            ) : (
-              <Button variant="secondary" size="md" onClick={startRecording} disabled={!hasInput}>
-                <DotFilledIcon className="mr-2 h-4 w-4" /> Rec
-              </Button>
-            )}
-          </div>
-          <Separator.Root className="h-6 w-px bg-white/10" decorative orientation="vertical" />
-          <div className="flex items-center gap-2">
-            {/* Subscription Status */}
-            {subscription && (
-              <div className="flex items-center gap-2 text-sm">
-                <StarIcon className="w-4 h-4 text-yellow-500" />
-                <span className="capitalize">{subscription.tier}</span>
-                {getRemainingExports() !== -1 && (
-                  <span className="text-white/60">
-                    ({getRemainingExports()} exports left today)
-                  </span>
-                )}
-                {getRemainingExports() === -1 && (
-                  <span className="text-green-500">Unlimited</span>
-                )}
-              </div>
-            )}
+              )}
 
-            {/* Export settings */}
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <Button variant="outline" size="md">Export</Button>
-              </DropdownMenu.Trigger>
+              {isSignedIn ? (
+                <div className="flex items-center gap-2">
+                  <ProfileMenu />
+                  <AuthUserButton />
+                </div>
+              ) : (
+                <AuthSignInButton />
+              )}
+            </div>
+          </div>
+
+          {/* Bottom Row - Controls */}
+          <div className="flex items-center justify-between gap-4">
+            {/* Left: Media Controls */}
+            <div className="flex items-center gap-2">
+              <input ref={fileRef} type="file" accept="audio/mp3,.mp3" className="hidden" onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) playFile(f);
+              }} />
+              <Button variant="primary" size="sm" onClick={() => fileRef.current?.click()}>
+                <UploadIcon className="w-4 h-4 mr-1.5" /> Load
+              </Button>
+              {isPlaying ? (
+                <Button variant="subtle" size="sm" onClick={pause}>
+                  <PauseIcon className="w-4 h-4 mr-1.5" /> Pause
+                </Button>
+              ) : (
+                <Button variant="subtle" size="sm" onClick={resume}>
+                  <PlayIcon className="w-4 h-4 mr-1.5" /> Play
+                </Button>
+              )}
+            </div>
+
+            {/* Center: Recording */}
+            <div className="flex items-center gap-2">
+              {isRecording ? (
+                <Button variant="danger" size="sm" onClick={stopRecording}>
+                  <DotFilledIcon className="w-4 h-4 mr-1.5" /> Stop Recording
+                </Button>
+              ) : isRemuxing ? (
+                <div className="flex items-center gap-3">
+                  <div className="text-xs text-white/70">Converting...</div>
+                  <div className="w-24 bg-white/10 rounded-full h-2">
+                    <div 
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${conversionProgress}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-white/70">{conversionProgress}%</div>
+                </div>
+              ) : (
+                <Button variant="secondary" size="sm" onClick={startRecording} disabled={!hasInput}>
+                  <DotFilledIcon className="w-4 h-4 mr-1.5" /> Record
+                </Button>
+              )}
+            </div>
+
+            {/* Right: Settings */}
+            <div className="flex items-center gap-2">
+              {/* Export settings */}
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <Button variant="outline" size="sm">Export</Button>
+                </DropdownMenu.Trigger>
               <DropdownMenu.Content className="min-w-72 bg-neutral-900 text-neutral-100 border border-white/10 rounded p-3 space-y-3">
                 <div className="text-xs opacity-70">Aspect Ratio</div>
                 <div className="text-xs opacity-50">Current: {exportWidth}×{exportHeight}</div>
@@ -421,10 +440,12 @@ export default function App() {
                 <div className="text-xs text-white/60">Recording uses these settings. Canvas will render at the selected resolution.</div>
               </DropdownMenu.Content>
             </DropdownMenu.Root>
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <Button variant="outline" size="md"><ImageIcon className="mr-2 h-4 w-4" /> Logo</Button>
-              </DropdownMenu.Trigger>
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <Button variant="outline" size="sm">
+                    <ImageIcon className="w-4 h-4" />
+                  </Button>
+                </DropdownMenu.Trigger>
               <DropdownMenu.Content className="min-w-56 bg-neutral-900 text-neutral-100 border border-white/10 rounded p-2 space-y-2">
                 <div className="text-xs opacity-70">Upload</div>
                 <input type="file" accept="image/*" onChange={(e) => {
@@ -450,10 +471,12 @@ export default function App() {
               </DropdownMenu.Content>
             </DropdownMenu.Root>
 
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <Button variant="outline" size="md">Background</Button>
-              </DropdownMenu.Trigger>
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <Button variant="outline" size="sm">
+                    <BackpackIcon className="w-4 h-4" />
+                  </Button>
+                </DropdownMenu.Trigger>
               <DropdownMenu.Content className="min-w-64 bg-neutral-900 text-neutral-100 border border-white/10 rounded p-2 space-y-2">
                 <div className="text-xs opacity-70">Color</div>
                 <input type="color" value={background.color} onChange={(e) => setBackground({ color: e.target.value })} />
@@ -479,18 +502,11 @@ export default function App() {
               </DropdownMenu.Content>
             </DropdownMenu.Root>
 
-            {isSignedIn ? (
-              <>
-                <ProfileMenu />
-                <AuthUserButton />
-              </>
-            ) : (
-              <AuthSignInButton />
-            )}
+            </div>
           </div>
         </div>
       </header>
-      <div className="grid grid-cols-[minmax(0,1fr)_360px] gap-0 h-[calc(100vh-56px)]">
+      <div className="grid grid-cols-[minmax(0,1fr)_360px] gap-0 h-[calc(100vh-76px)]">
         <div className="relative">
           <div className="w-full h-full">
             <OptimizedCanvas width={1280} height={720} data={data} palette={palette} onCanvasReady={(c) => { canvasRef.current = c; }} paused={showPreview} />
