@@ -462,7 +462,7 @@ export default function App() {
       <div className="grid grid-cols-[minmax(0,1fr)_360px] gap-0 h-[calc(100vh-56px)]">
         <div className="relative">
           <div className="w-full h-full">
-            <OptimizedCanvas width={1280} height={720} data={data} palette={palette} onCanvasReady={(c) => { canvasRef.current = c; }} />
+            <OptimizedCanvas width={1280} height={720} data={data} palette={palette} onCanvasReady={(c) => { canvasRef.current = c; }} paused={showPreview} />
           </div>
           {!hasInput && (
             <div className="absolute inset-0 flex items-center justify-center text-white/60 text-sm">Load a file or use mic to start</div>
@@ -478,7 +478,10 @@ export default function App() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div className="bg-neutral-900 rounded-xl border border-white/10 p-6 max-w-4xl w-full mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Preview Recording</h3>
+              <div>
+                <h3 className="text-lg font-semibold">Preview Recording</h3>
+                <p className="text-sm text-white/60">Canvas animation paused for better audio focus</p>
+              </div>
               <button
                 onClick={discardRecording}
                 className="text-white/60 hover:text-white"

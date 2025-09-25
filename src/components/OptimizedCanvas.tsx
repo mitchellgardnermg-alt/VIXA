@@ -11,13 +11,14 @@ export type VisualProps = {
   data: { freq: Uint8Array; wave: Uint8Array; rms: number };
   palette?: string[];
   onCanvasReady?: (canvas: HTMLCanvasElement) => void;
+  paused?: boolean;
 };
 
 function pick<T>(arr: T[], i: number) {
   return arr[i % arr.length];
 }
 
-export function OptimizedCanvas({ width = 1280, height = 720, data, palette = ["#0B0F14", "#10B981", "#22D3EE", "#60A5FA"], onCanvasReady }: VisualProps) {
+export function OptimizedCanvas({ width = 1280, height = 720, data, palette = ["#0B0F14", "#10B981", "#22D3EE", "#60A5FA"], onCanvasReady, paused = false }: VisualProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const layers = useAppStore((s) => s.layers);
   const logo = useAppStore((s) => s.logo);
@@ -34,6 +35,12 @@ export function OptimizedCanvas({ width = 1280, height = 720, data, palette = ["
 
     let raf = 0;
     const render = () => {
+      // Don't render if paused
+      if (paused) {
+        raf = requestAnimationFrame(render);
+        return;
+      }
+
       const { freq, wave, rms } = data;
       const w = canvas.width;
       const h = canvas.height;
@@ -1173,7 +1180,7 @@ export function OptimizedCanvas({ width = 1280, height = 720, data, palette = ["
     };
     raf = requestAnimationFrame(render);
     return () => cancelAnimationFrame(raf);
-  }, [colors, data, layers, logo, background]);
+  }, [colors, data, layers, logo, background, paused]);
 
   // Debug logging
   console.log('Layers:', layers.map(l => ({ mode: l.mode, visible: l.visible })));
