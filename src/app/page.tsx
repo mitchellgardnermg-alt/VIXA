@@ -84,9 +84,6 @@ export default function Home() {
             ) : (
               <div className="flex items-center gap-3">
                 <AuthSignInButton />
-                <Button variant="primary" size="md" onClick={() => router.push('/app')}>
-                  Try Free
-                </Button>
               </div>
             )}
           </div>
@@ -111,14 +108,7 @@ export default function Home() {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Button 
-              variant="primary" 
-              size="lg" 
-              className="text-lg px-8 py-4"
-              onClick={() => router.push('/app')}
-            >
-              Start Creating Free
-            </Button>
+            <AuthSignInButton />
             <Button 
               variant="outline" 
               size="lg" 
@@ -201,14 +191,7 @@ export default function Home() {
             Join thousands of DJs, streamers, and visual artists creating amazing experiences with VIXA.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              variant="primary" 
-              size="lg" 
-              className="text-lg px-8 py-4"
-              onClick={() => router.push('/app')}
-            >
-              Start Free Now
-            </Button>
+            <AuthSignInButton />
             <Button 
               variant="outline" 
               size="lg" 
