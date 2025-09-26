@@ -34,6 +34,16 @@ export default function Home() {
   const isSignedIn = !!user;
   const router = useRouter();
 
+  // Debug logging for development
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      console.log('Homepage - User:', user);
+      console.log('Homepage - Loading:', loading);
+      console.log('Homepage - IsSignedIn:', isSignedIn);
+    }
+  }, [user, loading, isSignedIn]);
+
   useEffect(() => {
     // For localhost development, don't auto-redirect to app
     const isLocalhost = typeof window !== 'undefined' && 
