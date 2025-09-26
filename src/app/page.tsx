@@ -21,13 +21,14 @@ export default function Home() {
     }
   }, [isSignedIn, router]);
 
-  // Show loading spinner while checking authentication
+  // Show loading spinner while checking authentication, but with a timeout
   if (loading) {
     return (
       <div className="h-screen bg-[#0A0F0C] flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white/60">Loading...</p>
+          <p className="text-white/40 text-sm mt-2">If this takes too long, try refreshing the page</p>
         </div>
       </div>
     );
