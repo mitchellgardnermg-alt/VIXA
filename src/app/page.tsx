@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
@@ -8,6 +8,26 @@ import Logo from '@/components/Logo';
 import AuthSignInButton from '@/components/auth/SignInButton';
 import AuthUserButton from '@/components/auth/UserButton';
 import { SpeakerLoudIcon, UploadIcon, PlayIcon, PauseIcon, DotFilledIcon, ImageIcon, BackpackIcon, StarIcon, CheckIcon } from '@radix-ui/react-icons';
+
+// Client-side only development mode indicator
+function DevelopmentModeIndicator() {
+  const [isLocalhost, setIsLocalhost] = useState(false);
+
+  useEffect(() => {
+    setIsLocalhost(
+      window.location.hostname === 'localhost' || 
+      window.location.hostname === '127.0.0.1'
+    );
+  }, []);
+
+  if (!isLocalhost) return null;
+
+  return (
+    <div className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-200 px-4 py-2 text-center text-sm">
+      🚧 Development Mode - Authentication bypassed for localhost
+    </div>
+  );
+}
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -94,13 +114,8 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Development Mode Indicator */}
-      {typeof window !== 'undefined' && 
-        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
-        <div className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-200 px-4 py-2 text-center text-sm">
-          🚧 Development Mode - Authentication bypassed for localhost
-        </div>
-      )}
+      {/* Development Mode Indicator - Client-side only */}
+      <DevelopmentModeIndicator />
 
       {/* Hero Section */}
       <section className="py-20 px-4">
