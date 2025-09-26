@@ -48,6 +48,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    // For localhost development, bypass authentication
+    const isLocalhost = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    
+    if (isLocalhost) {
+      console.log('Localhost detected - bypassing authentication');
+      const mockUser = {
+        id: 'dev-user-123',
+        email: email,
+        user_metadata: {
+          full_name: 'Development User'
+        }
+      };
+      
+      const mockSession = {
+        user: mockUser,
+        access_token: 'dev-token',
+        refresh_token: 'dev-refresh-token'
+      };
+      
+      setUser(mockUser);
+      setSession(mockSession);
+      setLoading(false);
+      return;
+    }
+    
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -56,6 +82,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
+    // For localhost development, bypass authentication
+    const isLocalhost = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    
+    if (isLocalhost) {
+      console.log('Localhost detected - bypassing sign-up authentication');
+      const mockUser = {
+        id: 'dev-user-123',
+        email: email,
+        user_metadata: {
+          full_name: 'Development User'
+        }
+      };
+      
+      const mockSession = {
+        user: mockUser,
+        access_token: 'dev-token',
+        refresh_token: 'dev-refresh-token'
+      };
+      
+      setUser(mockUser);
+      setSession(mockSession);
+      setLoading(false);
+      return;
+    }
+    
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -64,8 +116,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '/auth/callback';
+    // For localhost development, use a different approach
+    const isLocalhost = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    
+    if (isLocalhost) {
+      // For localhost development, create a mock session
+      console.log('Localhost detected - using development mode');
+      const mockUser = {
+        id: 'dev-user-123',
+        email: 'dev@localhost.com',
+        user_metadata: {
+          full_name: 'Development User'
+        }
+      };
+      
+      const mockSession = {
+        user: mockUser,
+        access_token: 'dev-token',
+        refresh_token: 'dev-refresh-token'
+      };
+      
+      setUser(mockUser);
+      setSession(mockSession);
+      setLoading(false);
+      return;
+    }
+    
+    let redirectUrl = '/auth/callback';
+    if (typeof window !== 'undefined') {
+      redirectUrl = `${window.location.origin}/auth/callback`;
+    }
+    
     console.log('Google OAuth redirect URL:', redirectUrl);
+    console.log('Is localhost:', isLocalhost);
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
