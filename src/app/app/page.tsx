@@ -282,35 +282,43 @@ export default function App() {
 
   return (
     <div className="h-screen overflow-hidden bg-[#0A0F0C] text-[#E6F1EE]">
+      {/* Development Mode Indicator */}
+      {typeof window !== 'undefined' && 
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+        <div className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-200 px-4 py-1 text-center text-xs">
+          🚧 Development Mode - Authentication bypassed
+        </div>
+      )}
+      
       <header className="sticky top-0 z-10 px-4 pt-3 pb-2">
         <div className="w-full rounded-xl border border-white/10 bg-[rgba(10,12,11,0.6)] backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.35)] px-4 py-2">
           <div className="flex items-center justify-between gap-4">
             {/* Left: Branding */}
             <div className="flex items-center gap-3">
               <Logo className="h-6 w-6" />
-              <div className="text-base font-semibold tracking-wide">VIXA</div>
-            </div>
+            <div className="text-base font-semibold tracking-wide">VIXA</div>
+          </div>
 
-              <input ref={fileRef} type="file" accept="audio/mp3,.mp3" className="hidden" onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) playFile(f);
-              }} />
+            <input ref={fileRef} type="file" accept="audio/mp3,.mp3" className="hidden" onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) playFile(f);
+            }} />
               <Button variant="primary" size="sm" onClick={() => fileRef.current?.click()}>
                 <UploadIcon className="w-4 h-4 mr-1" /> Load
               </Button>
               {isPlaying ? (
                 <Button variant="subtle" size="sm" onClick={pause}>
                   <PauseIcon className="w-4 h-4 mr-1" /> Pause
-                </Button>
-              ) : (
+              </Button>
+            ) : (
                 <Button variant="subtle" size="sm" onClick={resume}>
                   <PlayIcon className="w-4 h-4 mr-1" /> Play
-                </Button>
-              )}
-              {isRecording ? (
+              </Button>
+            )}
+            {isRecording ? (
                 <Button variant="danger" size="sm" onClick={stopRecording}>
                   <DotFilledIcon className="w-4 h-4 mr-1" /> Stop
-                </Button>
+              </Button>
               ) : isRemuxing ? (
                 <div className="flex items-center gap-2">
                   <div className="text-xs text-white/70">Converting...</div>
@@ -324,9 +332,9 @@ export default function App() {
               ) : (
                 <Button variant="secondary" size="sm" onClick={startRecording} disabled={!hasInput}>
                   <DotFilledIcon className="w-4 h-4 mr-1" /> Rec
-                </Button>
-              )}
-            </div>
+              </Button>
+            )}
+          </div>
 
             {/* Right: Settings and User */}
             <div className="flex items-center gap-2">
@@ -383,7 +391,7 @@ export default function App() {
                     onChange={(e) => setExportFps(Math.max(1, Math.min(120, Number(e.target.value) || 0)))} />
                 </div>
                 <div className="text-xs opacity-70 pt-1">Convert to MP4</div>
-                <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
                   <input 
                     type="checkbox" 
                     checked={convertToMp4} 
@@ -410,12 +418,12 @@ export default function App() {
                 <div className="text-xs text-white/60">Recording uses these settings. Canvas will render at the selected resolution.</div>
               </DropdownMenu.Content>
             </DropdownMenu.Root>
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
                   <Button variant="outline" size="sm">
                     <ImageIcon className="w-4 h-4" />
                   </Button>
-                </DropdownMenu.Trigger>
+              </DropdownMenu.Trigger>
               <DropdownMenu.Content className="min-w-56 bg-neutral-900 text-neutral-100 border border-white/10 rounded p-2 space-y-2">
                 <div className="text-xs opacity-70">Upload</div>
                 <input type="file" accept="image/*" onChange={(e) => {
@@ -441,12 +449,12 @@ export default function App() {
               </DropdownMenu.Content>
             </DropdownMenu.Root>
 
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
                   <Button variant="outline" size="sm">
                     <BackpackIcon className="w-4 h-4" />
                   </Button>
-                </DropdownMenu.Trigger>
+              </DropdownMenu.Trigger>
               <DropdownMenu.Content className="min-w-64 bg-neutral-900 text-neutral-100 border border-white/10 rounded p-2 space-y-2">
                 <div className="text-xs opacity-70">Color</div>
                 <input type="color" value={background.color} onChange={(e) => setBackground({ color: e.target.value })} />
@@ -473,14 +481,14 @@ export default function App() {
             </DropdownMenu.Root>
 
               {/* User Controls */}
-              {isSignedIn ? (
+            {isSignedIn ? (
                 <div className="flex items-center gap-2">
-                  <ProfileMenu />
-                  <AuthUserButton />
+                <ProfileMenu />
+                <AuthUserButton />
                 </div>
-              ) : (
-                <AuthSignInButton />
-              )}
+            ) : (
+              <AuthSignInButton />
+            )}
             </div>
           </div>
         </div>
