@@ -9,47 +9,14 @@ import AuthSignInButton from '@/components/auth/SignInButton';
 import AuthUserButton from '@/components/auth/UserButton';
 import { SpeakerLoudIcon, UploadIcon, PlayIcon, PauseIcon, DotFilledIcon, ImageIcon, BackpackIcon, StarIcon, CheckIcon } from '@radix-ui/react-icons';
 
-// Client-side only development mode indicator
-function DevelopmentModeIndicator() {
-  const [isLocalhost, setIsLocalhost] = useState(false);
-
-  useEffect(() => {
-    setIsLocalhost(
-      window.location.hostname === 'localhost' || 
-      window.location.hostname === '127.0.0.1'
-    );
-  }, []);
-
-  if (!isLocalhost) return null;
-
-  return (
-    <div className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-200 px-4 py-2 text-center text-sm">
-      🚧 Development Mode - Authentication bypassed for localhost
-    </div>
-  );
-}
 
 export default function Home() {
   const { user, loading } = useAuth();
   const isSignedIn = !!user;
   const router = useRouter();
 
-  // Debug logging for development
   useEffect(() => {
-    if (typeof window !== 'undefined' && 
-        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-      console.log('Homepage - User:', user);
-      console.log('Homepage - Loading:', loading);
-      console.log('Homepage - IsSignedIn:', isSignedIn);
-    }
-  }, [user, loading, isSignedIn]);
-
-  useEffect(() => {
-    // For localhost development, don't auto-redirect to app
-    const isLocalhost = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-    
-    if (isSignedIn && !isLocalhost) {
+    if (isSignedIn) {
       router.push('/app');
     }
   }, [isSignedIn, router]);
@@ -124,8 +91,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Development Mode Indicator - Client-side only */}
-      <DevelopmentModeIndicator />
 
       {/* Hero Section */}
       <section className="py-20 px-4">

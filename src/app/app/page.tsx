@@ -17,25 +17,6 @@ import ProfileMenu from "@/components/auth/ProfileMenu";
 import Logo from "@/components/Logo";
 import PricingModal from "@/components/PricingModal";
 
-// Client-side only development mode indicator
-function DevelopmentModeIndicator() {
-  const [isLocalhost, setIsLocalhost] = useState(false);
-
-  useEffect(() => {
-    setIsLocalhost(
-      window.location.hostname === 'localhost' || 
-      window.location.hostname === '127.0.0.1'
-    );
-  }, []);
-
-  if (!isLocalhost) return null;
-
-  return (
-    <div className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-200 px-4 py-1 text-center text-xs">
-      🚧 Development Mode - Authentication bypassed
-    </div>
-  );
-}
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -302,8 +283,6 @@ export default function App() {
 
   return (
     <div className="h-screen overflow-hidden bg-[#0A0F0C] text-[#E6F1EE]">
-      {/* Development Mode Indicator - Client-side only */}
-      <DevelopmentModeIndicator />
       
       <header className="sticky top-0 z-10 px-4 pt-3 pb-2">
         <div className="w-full rounded-xl border border-white/10 bg-[rgba(10,12,11,0.6)] backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.35)] px-4 py-2">
@@ -320,8 +299,8 @@ export default function App() {
             }} />
               <Button variant="primary" size="sm" onClick={() => fileRef.current?.click()}>
                 <UploadIcon className="w-4 h-4 mr-1" /> Load
-              </Button>
-              {isPlaying ? (
+            </Button>
+            {isPlaying ? (
                 <Button variant="subtle" size="sm" onClick={pause}>
                   <PauseIcon className="w-4 h-4 mr-1" /> Pause
               </Button>
