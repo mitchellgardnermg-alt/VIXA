@@ -203,7 +203,7 @@ export default function Home() {
     };
 
     return (
-      <div className="h-screen bg-[#0A0F0C] text-[#E6F1EE] overflow-hidden">
+      <div className="min-h-screen bg-[#0A0F0C] text-[#E6F1EE]">
         <header className="sticky top-0 z-10 px-4 pt-3 pb-2 bg-[rgba(10,12,11,0.8)] backdrop-blur-md border-b border-white/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -271,7 +271,7 @@ export default function Home() {
           </div>
         </header>
         
-        <div className="grid grid-cols-[minmax(0,1fr)_360px] gap-0">
+        <div className="grid grid-cols-[minmax(0,1fr)_360px] gap-0 min-h-[calc(100vh-56px)]">
           <div className="relative flex flex-col">
             <div className="w-full" style={{ height: `550px` }}>
               <OptimizedCanvas width={exportWidth} height={exportHeight} data={data} palette={palette} onCanvasReady={(c) => { canvasRef.current = c; }} paused={showPreview} />
@@ -314,15 +314,65 @@ export default function Home() {
                   />
                 </div>
 
-                {/* Load File Button */}
-                <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
-                  <UploadIcon className="w-4 h-4" />
-                </Button>
+                {/* Control Buttons */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {/* Volume Control */}
+                    <div className="flex items-center gap-2">
+                      <SpeakerLoudIcon className="w-4 h-4 text-white/60" />
+                      <input
+                        type="range"
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        value={volume}
+                        onChange={(e) => handleVolumeChange(Number(e.target.value))}
+                        className="w-20 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <span className="text-xs text-white/60 w-8">{Math.round(volume * 100)}%</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {/* Previous Track */}
+                    <Button variant="outline" size="sm" onClick={restartTrack}>
+                      <TrackPreviousIcon className="w-4 h-4" />
+                    </Button>
+
+                    {/* Play/Pause */}
+                    {isPlaying ? (
+                      <Button variant="primary" size="md" onClick={pause}>
+                        <PauseIcon className="w-5 h-5" />
+                      </Button>
+                    ) : (
+                      <Button variant="primary" size="md" onClick={resume}>
+                        <PlayIcon className="w-5 h-5" />
+                      </Button>
+                    )}
+
+                    {/* Next Track */}
+                    <Button variant="outline" size="sm">
+                      <TrackNextIcon className="w-4 h-4" />
+                    </Button>
+
+                    {/* Restart */}
+                    <Button variant="outline" size="sm" onClick={restartTrack}>
+                      <RotateCounterClockwiseIcon className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {/* Load File Button */}
+                    <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+                      <UploadIcon className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
           
-          <aside className="border-l border-white/10 bg-black/30 h-[calc(100vh-56px)] overflow-y-auto">
+          <aside className="border-l border-white/10 bg-black/30 min-h-[calc(100vh-56px)] overflow-y-auto">
             <Mixer />
           </aside>
         </div>
