@@ -271,8 +271,9 @@ export default function Home() {
           </div>
         </header>
         
-        <div className="grid grid-cols-[minmax(0,1fr)_360px] gap-0 min-h-[calc(100vh-56px)]">
-          <div className="relative flex flex-col">
+        <div className="flex h-[calc(100vh-56px)]">
+          {/* Main Content Area - Fixed */}
+          <div className="flex-1 flex flex-col">
             <div className="w-full" style={{ height: `550px` }}>
               <OptimizedCanvas width={exportWidth} height={exportHeight} data={data} palette={palette} onCanvasReady={(c) => { canvasRef.current = c; }} paused={showPreview} />
             </div>
@@ -280,7 +281,7 @@ export default function Home() {
               <div className="absolute inset-0 flex items-center justify-center text-white/60 text-sm">Load a file or use mic to start</div>
             )}
             
-            {/* Music Control Section */}
+            {/* Music Control Section - Fixed */}
             <div className="bg-[rgba(10,12,11,0.8)] backdrop-blur-md border-t border-white/10 p-4">
               <div className="max-w-4xl mx-auto">
                 {/* Track Info */}
@@ -372,7 +373,8 @@ export default function Home() {
             </div>
           </div>
           
-          <aside className="border-l border-white/10 bg-black/30 min-h-[calc(100vh-56px)] overflow-y-auto">
+          {/* Sidebar - Independent Scrolling */}
+          <aside className="w-[360px] border-l border-white/10 bg-black/30 overflow-y-auto">
             <Mixer />
           </aside>
         </div>
