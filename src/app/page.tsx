@@ -46,6 +46,21 @@ export default function Home() {
   const [volume, setVolume] = useState(1);
   const [showAppInterface, setShowAppInterface] = useState(false);
 
+  // Export settings
+  const [exportWidth, setExportWidth] = useState<number>(1280);
+  const [exportHeight, setExportHeight] = useState<number>(720);
+  const [exportFps, setExportFps] = useState<number>(60);
+  const [aspectRatio, setAspectRatio] = useState<string>("16:9");
+
+  // Aspect ratio presets for social media
+  const aspectRatios = {
+    "16:9": { width: 1920, height: 1080, name: "YouTube (16:9)" },
+    "9:16": { width: 1080, height: 1920, name: "TikTok (9:16)" },
+    "1:1": { width: 1080, height: 1080, name: "Instagram Square (1:1)" },
+    "4:5": { width: 1080, height: 1350, name: "Instagram Portrait (4:5)" },
+    "custom": { width: exportWidth, height: exportHeight, name: "Custom" }
+  };
+
   // Subscription management
   const { subscription, canExport, getRemainingExports, incrementExportUsage, setSubscription } = useSubscriptionStore();
 
@@ -129,8 +144,189 @@ export default function Home() {
 
   // If signed in OR "Try Free" clicked, show the full featured app interface
   if (isSignedIn || showAppInterface) {
-    const exportWidth = 1280;
-    const exportHeight = 720;
+    // Update export dimensions when aspect ratio changes
+    const handleAspectRatioChange = (ratio: string) => {
+      setAspectRatio(ratio);
+      if (ratio !== "custom") {
+        const preset = aspectRatios[ratio as keyof typeof aspectRatios];
+        setExportWidth(preset.width);
+        setExportHeight(preset.height);
+      }
+    };
+
+    // Compress video before upload to reduce file size
+    async function compressVideo(blob: Blob, quality: number = 0.7): Promise<Blob> {
+      return new Promise((resolve) => {
+        const video = document.createElement('video');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        video.onloadeddata = () => {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          
+          // Draw video frame to canvas
+          ctx?.drawImage(video, 0, 0);
+          
+          // Convert to blob with compression
+          canvas.toBlob((compressedBlob) => {
+            if (compressedBlob) {
+              resolve(compressedBlob);
+            } else {
+              resolve(blob); // Fallback to original
+            }
+          }, 'video/webm', quality);
+        };
+        
+        video.src = URL.createObjectURL(blob);
+      });
+    }
+
+    // Server-side conversion to MP4 using Cloudinary with progress tracking
+    async function convertToMp4Blob(webmBlob: Blob): Promise<Blob> {
+      setConversionProgress(10);
+      
+      // Compress video before upload
+      const compressedBlob = await compressVideo(webmBlob, 0.6);
+      setConversionProgress(30);
+      
+      const formData = new FormData();
+      formData.append('file', compressedBlob, 'recording.webm');
+      formData.append('width', exportWidth.toString());
+      formData.append('height', exportHeight.toString());
+      
+      setConversionProgress(50);
+      
+      const response = await fetch('/api/convert', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      setConversionProgress(80);
+      
+      if (!response.ok) {
+        throw new Error(`Conversion failed: ${response.status}`);
+      }
+      
+      const result = await response.blob();
+      setConversionProgress(100);
+      
+      return result;
+    }
+
+    async function startRecording() {
+      const canvas = canvasRef.current;
+      const audioStream = getOutputStream();
+      if (!canvas || !audioStream) return;
+      // Switch to export resolution before capture
+      setIsRecording(true);
+      await new Promise(requestAnimationFrame);
+      // Use selected FPS for export
+      const canvasStream = canvas.captureStream(Math.max(1, Math.min(120, exportFps)));
+      const audioTracks = audioStream.getAudioTracks();
+      audioTracks.forEach((t) => canvasStream.addTrack(t));
+
+      // Choose recording format based on convertToMp4 setting
+      let selectedType: string;
+      if (convertToMp4) {
+        // Use best supported format for conversion
+        const preferredTypes = [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus", 
+          "video/webm"
+        ];
+        selectedType = preferredTypes.find((t) => MediaRecorder.isTypeSupported(t)) || "";
+      } else {
+        // Try MP4 first, fallback to WebM
+        if (MediaRecorder.isTypeSupported("video/mp4;codecs=h264,aac")) {
+          selectedType = "video/mp4;codecs=h264,aac";
+        } else {
+          const webmTypes = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+          selectedType = webmTypes.find((t) => MediaRecorder.isTypeSupported(t)) || "";
+        }
+      }
+      
+      if (!selectedType) {
+        setIsRecording(false);
+        alert("No supported recording format found in this browser.");
+        return;
+      }
+
+      const mr = new MediaRecorder(canvasStream, {
+        mimeType: selectedType,
+        videoBitsPerSecond: 8_000_000,
+        audioBitsPerSecond: 192_000,
+      });
+      recordedChunksRef.current = [];
+      mr.ondataavailable = (e) => { if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data); };
+      mr.onstop = async () => {
+        const blob = new Blob(recordedChunksRef.current, { type: mr.mimeType });
+        
+        // Show preview instead of immediate download
+        setPreviewBlob(blob);
+        setShowPreview(true);
+        setIsRecording(false);
+      };
+      mr.start(250);
+      mediaRecorderRef.current = mr;
+    }
+
+    function stopRecording() {
+      mediaRecorderRef.current?.stop();
+      setIsRecording(false);
+    }
+
+    // Export the preview video
+    async function exportVideo() {
+      if (!previewBlob) return;
+      
+      // Check subscription limits
+      if (!canExport()) {
+        setShowPricing(true);
+        return;
+      }
+      
+      try {
+        setIsRemuxing(true);
+        
+        if (convertToMp4 && !previewBlob.type.includes('mp4')) {
+          const convertedBlob = await convertToMp4Blob(previewBlob);
+          const url = URL.createObjectURL(convertedBlob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `vixa-recording.mp4`;
+          a.click();
+          URL.revokeObjectURL(url);
+        } else {
+          // Direct download
+          const url = URL.createObjectURL(previewBlob);
+          const a = document.createElement("a");
+          a.href = url;
+          const ext = previewBlob.type.includes('mp4') ? 'mp4' : 'webm';
+          a.download = `vixa-recording.${ext}`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+        
+        // Increment usage counter
+        incrementExportUsage();
+        
+        // Close preview
+        setShowPreview(false);
+        setPreviewBlob(null);
+      } catch (error) {
+        console.error('Export failed:', error);
+      } finally {
+        setIsRemuxing(false);
+      }
+    }
+
+    // Discard the recording
+    function discardRecording() {
+      setShowPreview(false);
+      setPreviewBlob(null);
+      recordedChunksRef.current = [];
+    }
 
     const formatTime = (seconds: number) => {
       const mins = Math.floor(seconds / 60);
@@ -153,53 +349,6 @@ export default function Home() {
     const restartTrack = () => {
       setCurrentTime(0);
       // TODO: Implement actual restart
-    };
-
-    const exportVideo = async () => {
-      if (!previewBlob) return;
-      
-      setIsRemuxing(true);
-      setConversionProgress(0);
-      
-      try {
-        const formData = new FormData();
-        formData.append('video', previewBlob, 'recording.webm');
-        formData.append('convertToMp4', convertToMp4.toString());
-        
-        const response = await fetch('/api/convert', {
-          method: 'POST',
-          body: formData,
-        });
-        
-        if (!response.ok) throw new Error('Conversion failed');
-        
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `vixa-recording-${Date.now()}.${convertToMp4 ? 'mp4' : 'webm'}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        setShowPreview(false);
-        setPreviewBlob(null);
-        
-        // Increment export usage
-        incrementExportUsage();
-      } catch (error) {
-        console.error('Export failed:', error);
-        alert('Export failed. Please try again.');
-      } finally {
-        setIsRemuxing(false);
-        setConversionProgress(0);
-      }
-    };
-
-    const discardRecording = () => {
-      setShowPreview(false);
-      setPreviewBlob(null);
     };
 
     return (
@@ -245,7 +394,7 @@ export default function Home() {
               <Button 
                 variant={isRecording ? "destructive" : "outline"} 
                 size="sm" 
-                onClick={() => setIsRecording(!isRecording)}
+                onClick={() => isRecording ? stopRecording() : startRecording()}
               >
                 <DotFilledIcon className="w-4 h-4 mr-2" />
                 {isRecording ? 'Stop' : 'Record'}
@@ -306,6 +455,101 @@ export default function Home() {
                   </div>
                   <div className="text-xs opacity-70">Image Opacity</div>
                   <input type="range" min={0} max={1} step={0.01} value={background.opacity} onChange={(e) => setBackground({ opacity: Number(e.target.value) })} />
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+
+              {/* Export Settings Button */}
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <UploadIcon className="w-4 h-4 mr-2" />
+                    Export
+                  </Button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content className="w-80 p-4 bg-neutral-900 border border-white/10">
+                  <div className="text-xs opacity-70 mb-3">Export Settings</div>
+                  
+                  {/* Aspect Ratio */}
+                  <div className="mb-3">
+                    <div className="text-xs opacity-70 mb-2">Aspect Ratio</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(aspectRatios).map(([key, preset]) => (
+                        <Button
+                          key={key}
+                          size="sm"
+                          variant={aspectRatio === key ? "subtle" : "ghost"}
+                          onClick={() => handleAspectRatioChange(key)}
+                          className="text-xs"
+                        >
+                          {preset.name}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom Dimensions */}
+                  {aspectRatio === "custom" && (
+                    <div className="mb-3">
+                      <div className="text-xs opacity-70 mb-2">Custom Dimensions</div>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          value={exportWidth}
+                          onChange={(e) => setExportWidth(Number(e.target.value))}
+                          className="w-20 px-2 py-1 bg-white/10 border border-white/20 rounded text-xs"
+                          placeholder="Width"
+                        />
+                        <span className="text-xs text-white/60 self-center">×</span>
+                        <input
+                          type="number"
+                          value={exportHeight}
+                          onChange={(e) => setExportHeight(Number(e.target.value))}
+                          className="w-20 px-2 py-1 bg-white/10 border border-white/20 rounded text-xs"
+                          placeholder="Height"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* FPS */}
+                  <div className="mb-3">
+                    <div className="text-xs opacity-70 mb-2">Frame Rate: {exportFps} FPS</div>
+                    <input
+                      type="range"
+                      min={24}
+                      max={120}
+                      step={1}
+                      value={exportFps}
+                      onChange={(e) => setExportFps(Number(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Format */}
+                  <div className="mb-3">
+                    <div className="text-xs opacity-70 mb-2">Export Format</div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={!convertToMp4 ? "subtle" : "ghost"}
+                        onClick={() => setConvertToMp4(false)}
+                      >
+                        WebM
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={convertToMp4 ? "subtle" : "ghost"}
+                        onClick={() => setConvertToMp4(true)}
+                      >
+                        MP4
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Export Usage */}
+                  <div className="text-xs text-white/60">
+                    Remaining exports: {getRemainingExports()}
+                  </div>
                 </DropdownMenu.Content>
               </DropdownMenu.Root>
 
