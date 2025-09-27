@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import PricingCard from '@/components/pricing/PricingCard';
 import { Button } from '@/components/ui/Button';
 import { StarIcon, CheckIcon } from '@radix-ui/react-icons';
+import { Suspense } from 'react';
 
-export default function PricingPage() {
+function PricingContent() {
   const { user, loading } = useAuth();
   const isSignedIn = !!user;
   const router = useRouter();
@@ -218,5 +219,20 @@ export default function PricingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen bg-[#0A0F0C] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white/60">Loading pricing...</p>
+        </div>
+      </div>
+    }>
+      <PricingContent />
+    </Suspense>
   );
 }
