@@ -40,13 +40,13 @@ export default function AuthCallback() {
             }
           }
 
-          // Existing user, redirect to app
-          console.log('Existing user, redirecting to app');
-          router.push('/app');
+          // Existing user, redirect to main app
+          console.log('Existing user, redirecting to main app');
+          router.push('/');
         } catch (error) {
           console.error('Error checking user:', error);
-          // Fallback: redirect to app
-          router.push('/app');
+          // Fallback: redirect to main app
+          router.push('/');
         }
       } else if (!loading && !user) {
         // No user found, redirect to home

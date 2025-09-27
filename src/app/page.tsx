@@ -1,23 +1,66 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import Logo from '@/components/Logo';
 import AuthSignInButton from '@/components/auth/SignInButton';
 import AuthUserButton from '@/components/auth/UserButton';
-import { SpeakerLoudIcon, UploadIcon, PlayIcon, PauseIcon, DotFilledIcon, ImageIcon, BackpackIcon, StarIcon, CheckIcon } from '@radix-ui/react-icons';
+import { useAudioAnalyser } from "@/hooks/useAudioAnalyser";
+import OptimizedCanvas from "@/components/OptimizedCanvas";
+import Mixer from "@/components/Mixer";
+import { useAppStore } from "@/store/useAppStore";
+import { useSubscriptionStore } from "@/store/useSubscriptionStore";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import * as Separator from "@radix-ui/react-separator";
+import { SpeakerLoudIcon, UploadIcon, PlayIcon, PauseIcon, DotFilledIcon, ImageIcon, BackpackIcon, StarIcon, CheckIcon, InputIcon, TrackNextIcon, TrackPreviousIcon, RotateCounterClockwiseIcon } from '@radix-ui/react-icons';
+import ProfileMenu from "@/components/auth/ProfileMenu";
+import PricingModal from "@/components/PricingModal";
 
 export default function Home() {
   const { user, loading } = useAuth();
   const isSignedIn = !!user;
   const router = useRouter();
+
+  // App functionality (moved from /app page)
+  const { data, playMic, playFile, isPlaying, pause, resume, hasInput, getOutputStream } = useAudioAnalyser();
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [palette] = useState(["#071923", "#00BBF9", "#00F5D4", "#E0FBFC"]);
+  const logo = useAppStore((s) => s.logo);
+  const setLogo = useAppStore((s) => s.setLogo);
+  const background = useAppStore((s) => s.background);
+  const setBackground = useAppStore((s) => s.setBackground);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<BlobPart[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isRemuxing, setIsRemuxing] = useState(false);
+  const [convertToMp4, setConvertToMp4] = useState(false);
+  const [conversionProgress, setConversionProgress] = useState(0);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
+  const [showPricing, setShowPricing] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+
+  // Subscription management
+  const { subscription, canExport, getRemainingExports, incrementExportUsage, setSubscription } = useSubscriptionStore();
+
+  // Initialize free subscription if none exists
   useEffect(() => {
-    if (isSignedIn) {
-      router.push('/app');
+    if (!subscription && isSignedIn) {
+      setSubscription({
+        tier: 'free',
+        status: 'active',
+        exportsUsed: 0,
+        exportsLimit: 3,
+        startDate: new Date().toISOString(),
+        endDate: null
+      });
     }
-  }, [isSignedIn, router]);
+  }, [subscription, isSignedIn, setSubscription]);
 
   const features = [
     {
@@ -83,6 +126,85 @@ export default function Home() {
     }
   ];
 
+  // If signed in, show the app interface
+  if (isSignedIn) {
+    return (
+      <div className="min-h-screen bg-[#0A0F0C] text-[#E6F1EE]">
+        <header className="sticky top-0 z-10 px-4 pt-3 pb-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Logo className="h-8 w-8" />
+              <span className="text-lg font-bold">VIXA</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => router.push('/pricing')}
+                className="text-white/70 hover:text-white"
+              >
+                Pricing
+              </Button>
+              <ProfileMenu />
+            </div>
+          </div>
+        </header>
+        
+        <div className="grid grid-cols-[minmax(0,1fr)_360px] gap-0">
+          <div className="relative flex flex-col">
+            <div className="w-full" style={{ height: `550px` }}>
+              <OptimizedCanvas width={1280} height={720} data={data} palette={palette} onCanvasReady={(c) => { canvasRef.current = c; }} paused={showPreview} />
+            </div>
+          </div>
+          <div className="bg-[#0F1411] border-l border-white/10 p-4">
+            <Mixer 
+              data={data} 
+              playMic={playMic} 
+              playFile={playFile} 
+              isPlaying={isPlaying} 
+              pause={pause} 
+              resume={resume} 
+              hasInput={hasInput}
+              fileRef={fileRef}
+              isRecording={isRecording}
+              setIsRecording={setIsRecording}
+              canvasRef={canvasRef}
+              showPreview={showPreview}
+              setShowPreview={setShowPreview}
+              previewBlob={previewBlob}
+              setPreviewBlob={setPreviewBlob}
+              isRemuxing={isRemuxing}
+              setIsRemuxing={setIsRemuxing}
+              convertToMp4={convertToMp4}
+              setConvertToMp4={setConvertToMp4}
+              conversionProgress={conversionProgress}
+              setConversionProgress={setConversionProgress}
+              currentTime={currentTime}
+              setCurrentTime={setCurrentTime}
+              duration={duration}
+              setDuration={setDuration}
+              volume={volume}
+              setVolume={setVolume}
+              canExport={canExport}
+              getRemainingExports={getRemainingExports}
+              incrementExportUsage={incrementExportUsage}
+              showPricing={showPricing}
+              setShowPricing={setShowPricing}
+            />
+          </div>
+        </div>
+        
+        {showPricing && (
+          <PricingModal 
+            isOpen={showPricing} 
+            onClose={() => setShowPricing(false)} 
+          />
+        )}
+      </div>
+    );
+  }
+
+  // If not signed in, show the landing page
   return (
     <div className="min-h-screen bg-[#0A0F0C] text-[#E6F1EE]">
       {/* Header */}
@@ -101,20 +223,9 @@ export default function Home() {
             >
               Pricing
             </Button>
-            {isSignedIn ? (
-              <div className="flex items-center gap-4">
-                <Button variant="outline" size="md" onClick={() => router.push('/app')}>
-                  Go to App
-                </Button>
-                <AuthUserButton />
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <AuthSignInButton 
-                  size="sm"
-                />
-              </div>
-            )}
+            <AuthSignInButton 
+              size="sm"
+            />
           </div>
         </div>
       </header>

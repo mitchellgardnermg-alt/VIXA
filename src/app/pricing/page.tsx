@@ -22,7 +22,7 @@ function PricingContent() {
     
     if (plan === 'Free') {
       // For new users, redirect to app after selecting free plan
-      router.push('/app');
+      router.push('/');
       return;
     }
     
