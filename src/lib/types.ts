@@ -28,12 +28,15 @@ export type Layer = {
   muted?: boolean;
   solo?: boolean;
   visible?: boolean; // visual visibility toggle
+  mirrored?: boolean; // horizontal mirror flip
+  mirroredVertical?: boolean; // vertical mirror flip
 };
 
 export type Palette = {
   id: string;
   name: string;
   colors: string[];
+  isCustom?: boolean;
 };
 
 

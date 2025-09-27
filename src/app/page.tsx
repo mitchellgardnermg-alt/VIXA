@@ -13,7 +13,6 @@ export default function Home() {
   const { user, loading } = useAuth();
   const isSignedIn = !!user;
   const router = useRouter();
-
   useEffect(() => {
     if (isSignedIn) {
       router.push('/app');
@@ -40,6 +39,26 @@ export default function Home() {
       icon: <BackpackIcon className="h-6 w-6" />,
       title: "Professional Mixer",
       description: "Multi-layer control with blend modes and palettes"
+    },
+    {
+      icon: <StarIcon className="h-6 w-6" />,
+      title: "Custom Palettes",
+      description: "Create and save your own color schemes"
+    },
+    {
+      icon: <DotFilledIcon className="h-6 w-6" />,
+      title: "Blend Modes",
+      description: "Screen, add, multiply, and more blend modes"
+    },
+    {
+      icon: <UploadIcon className="h-6 w-6" />,
+      title: "Logo Overlay",
+      description: "Add custom logos and branding to your visuals"
+    },
+    {
+      icon: <CheckIcon className="h-6 w-6" />,
+      title: "Export Options",
+      description: "Multiple resolution and format options"
     }
   ];
 
@@ -74,6 +93,14 @@ export default function Home() {
             <span className="text-xl font-bold">VIXA</span>
           </div>
           <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => router.push('/pricing')}
+              className="text-white/70 hover:text-white"
+            >
+              Pricing
+            </Button>
             {isSignedIn ? (
               <div className="flex items-center gap-4">
                 <Button variant="outline" size="md" onClick={() => router.push('/app')}>
@@ -83,7 +110,9 @@ export default function Home() {
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <AuthSignInButton />
+                <AuthSignInButton 
+                  size="sm"
+                />
               </div>
             )}
           </div>
@@ -91,10 +120,51 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto text-center max-w-4xl">
+      <section className="relative py-20 px-4 overflow-hidden">
+        {/* Waveform Background */}
+        <div className="absolute inset-0 z-0">
+          {/* CSS Waveform Visualization */}
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+            <div className="flex items-center justify-center space-x-1 opacity-30">
+              {Array.from({ length: 60 }).map((_, i) => {
+                // Use deterministic values based on index to avoid hydration mismatch
+                // Round to fixed decimal places to ensure server/client consistency
+                const baseHeight = 20 + Math.sin((i * Math.PI) / 30) * 40;
+                const variation = Math.sin((i * Math.PI) / 15) * 15;
+                const height = Math.round((baseHeight + variation) * 100) / 100; // Round to 2 decimal places
+                const duration = 1.5 + (i % 3) * 0.3;
+                const scale = Math.round((0.5 + Math.sin((i * Math.PI) / 15) * 0.5) * 1000000) / 1000000; // Round to 6 decimal places
+                const animationDelay = Math.round(i * 0.1 * 10) / 10; // Round to 1 decimal place
+                
+                return (
+                  <div
+                    key={i}
+                    className="bg-gradient-to-t from-cyan-500 via-blue-500 to-pink-500 rounded-full animate-pulse"
+                    style={{
+                      width: '2px',
+                      height: `${height}px`,
+                      animationDelay: `${animationDelay}s`,
+                      animationDuration: `${duration}s`,
+                      transform: `scaleY(${scale})`,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Animated CSS Background as Enhancement */}
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-pink-500/10">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent animate-pulse"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-pink-500/10 to-transparent animate-pulse delay-1000"></div>
+          </div>
+          
+          {/* Overlay for better text readability */}
+          <div className="absolute inset-0 bg-black/50"></div>
+        </div>
+        
+        <div className="container mx-auto text-center max-w-4xl relative z-10">
           <div className="mb-8">
-            <Logo className="h-20 w-20 mx-auto mb-6" />
             <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
               VIXA
             </h1>
@@ -116,29 +186,52 @@ export default function Home() {
             >
               Try Free
             </Button>
-            <AuthSignInButton />
-            <Button 
-              variant="outline" 
+            <AuthSignInButton 
               size="lg" 
               className="text-lg px-8 py-4"
-              onClick={() => router.push('/pricing')}
+            />
+            <Button 
+              variant="default" 
+              size="lg" 
+              className="text-lg px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold"
+              onClick={() => router.push('/signup')}
             >
-              View Pricing
+              Lifetime Access - $44.99
             </Button>
           </div>
 
-          <div className="flex items-center justify-center gap-8 text-sm text-white/60">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-white/60">
             <div className="flex items-center gap-2">
               <CheckIcon className="h-4 w-4 text-emerald-400" />
               No credit card required
             </div>
             <div className="flex items-center gap-2">
               <CheckIcon className="h-4 w-4 text-emerald-400" />
-              Free forever plan
+              Free plan
             </div>
             <div className="flex items-center gap-2">
               <CheckIcon className="h-4 w-4 text-emerald-400" />
               Instant access
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckIcon className="h-4 w-4 text-emerald-400" />
+              13+ visual modes
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckIcon className="h-4 w-4 text-emerald-400" />
+              Real-time audio analysis
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckIcon className="h-4 w-4 text-emerald-400" />
+              Live recording
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckIcon className="h-4 w-4 text-emerald-400" />
+              Professional mixer
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckIcon className="h-4 w-4 text-emerald-400" />
+              Custom palettes
             </div>
           </div>
         </div>
@@ -207,14 +300,17 @@ export default function Home() {
             >
               Try Free
             </Button>
-            <AuthSignInButton />
-            <Button 
-              variant="outline" 
+            <AuthSignInButton 
               size="lg" 
               className="text-lg px-8 py-4"
-              onClick={() => router.push('/pricing')}
+            />
+            <Button 
+              variant="default" 
+              size="lg" 
+              className="text-lg px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold"
+              onClick={() => router.push('/signup')}
             >
-              View Plans
+              Lifetime Access - $44.99
             </Button>
           </div>
         </div>

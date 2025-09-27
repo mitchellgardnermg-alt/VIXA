@@ -93,8 +93,28 @@ export function OptimizedCanvas({ width = 1280, height = 720, data, palette = ["
           default: ctx.globalCompositeOperation = "source-over"; break;
         }
 
+        // Apply mirror transformations if enabled
+        if (layer.mirrored || layer.mirroredVertical) {
+          ctx.save();
+          if (layer.mirrored && layer.mirroredVertical) {
+            // Both horizontal and vertical mirror
+            ctx.scale(-1, -1);
+            ctx.translate(-w, -h);
+          } else if (layer.mirrored) {
+            // Horizontal mirror only
+            ctx.scale(-1, 1);
+            ctx.translate(-w, 0);
+          } else if (layer.mirroredVertical) {
+            // Vertical mirror only
+            ctx.scale(1, -1);
+            ctx.translate(0, -h);
+          }
+        }
+
         if (layer.mode === "bars") {
-          const barCount = 96;
+          // Adjust bar count based on aspect ratio
+          const aspectRatio = w / h;
+          const barCount = aspectRatio > 1.5 ? 128 : aspectRatio < 0.8 ? 64 : 96;
           const binSize = Math.floor(freq.length / barCount) || 1;
           const barWidth = w / barCount;
           for (let i = 0; i < barCount; i++) {
@@ -106,7 +126,9 @@ export function OptimizedCanvas({ width = 1280, height = 720, data, palette = ["
             ctx.fillRect(i * barWidth, h - barH, barWidth - 1, barH);
           }
         } else if (layer.mode === "waveform") {
-          ctx.lineWidth = 2;
+          // Adjust line width based on aspect ratio
+          const aspectRatio = w / h;
+          ctx.lineWidth = aspectRatio > 1.5 ? 3 : aspectRatio < 0.8 ? 1.5 : 2;
           ctx.strokeStyle = pick(pal, 2);
           ctx.beginPath();
           for (let x = 0; x < w; x++) {
@@ -119,8 +141,9 @@ export function OptimizedCanvas({ width = 1280, height = 720, data, palette = ["
         } else if (layer.mode === "radial") {
           const cx = w * 0.5;
           const cy = h * 0.5;
-          const radius = Math.min(w, h) * 0.35;
-          const N = 120;
+          const aspectRatio = w / h;
+          const radius = Math.min(w, h) * (aspectRatio > 1.5 ? 0.25 : aspectRatio < 0.8 ? 0.45 : 0.35);
+          const N = aspectRatio > 1.5 ? 160 : aspectRatio < 0.8 ? 80 : 120;
           const step = Math.max(1, Math.floor(freq.length / N));
           for (let i = 0; i < N; i++) {
             const v = (freq[i * step] ?? 0) / 255;
@@ -134,7 +157,9 @@ export function OptimizedCanvas({ width = 1280, height = 720, data, palette = ["
             ctx.fill();
           }
         } else if (layer.mode === "mirror-eq") {
-          const barCount = 64;
+          // Adjust bar count based on aspect ratio
+          const aspectRatio = w / h;
+          const barCount = aspectRatio > 1.5 ? 80 : aspectRatio < 0.8 ? 40 : 64;
           const binSize = Math.floor(freq.length / barCount) || 1;
           const barWidth = (w / 2) / barCount;
           for (let i = 0; i < barCount; i++) {
@@ -148,7 +173,9 @@ export function OptimizedCanvas({ width = 1280, height = 720, data, palette = ["
             ctx.fillRect((w * 0.5) + i * barWidth, (h * 0.5) - barH, barWidth - 1, barH * 2);
           }
         } else if (layer.mode === "peak-bars") {
-          const barCount = 96;
+          // Adjust bar count based on aspect ratio
+          const aspectRatio = w / h;
+          const barCount = aspectRatio > 1.5 ? 128 : aspectRatio < 0.8 ? 64 : 96;
           const binSize = Math.floor(freq.length / barCount) || 1;
           const barWidth = w / barCount;
           for (let i = 0; i < barCount; i++) {
@@ -162,7 +189,8 @@ export function OptimizedCanvas({ width = 1280, height = 720, data, palette = ["
           // mini history graph top-left
           ctx.globalAlpha = layer.opacity * 0.9;
           ctx.strokeStyle = pick(pal, 2);
-          ctx.lineWidth = 1.5;
+          const aspectRatio = w / h;
+          ctx.lineWidth = aspectRatio > 1.5 ? 2 : aspectRatio < 0.8 ? 1 : 1.5;
           const ww = Math.min(240, w * 0.3), hh = Math.min(80, h * 0.2);
           ctx.strokeRect(12, 12, ww, hh);
           ctx.beginPath();
@@ -174,9 +202,11 @@ export function OptimizedCanvas({ width = 1280, height = 720, data, palette = ["
           ctx.stroke();
         } else if (layer.mode === "rings") {
           const cx = w * 0.5, cy = h * 0.5;
-          ctx.lineWidth = 2;
-          for (let i = 0; i < 6; i++) {
-            const idx = Math.floor((i / 6) * freq.length);
+          const aspectRatio = w / h;
+          ctx.lineWidth = aspectRatio > 1.5 ? 3 : aspectRatio < 0.8 ? 1.5 : 2;
+          const ringCount = aspectRatio > 1.5 ? 8 : aspectRatio < 0.8 ? 4 : 6;
+          for (let i = 0; i < ringCount; i++) {
+            const idx = Math.floor((i / ringCount) * freq.length);
             const v = (freq[idx] ?? 0) / 255;
             ctx.strokeStyle = pick(pal, 1 + i);
             ctx.beginPath();
@@ -186,7 +216,8 @@ export function OptimizedCanvas({ width = 1280, height = 720, data, palette = ["
         } else if (layer.mode === "lissajous") {
           // XY scope approximation from stereo proxy (use waveform)
           const cx = w * 0.5, cy = h * 0.5;
-          const scale = Math.min(w, h) * 0.35;
+          const aspectRatio = w / h;
+          const scale = Math.min(w, h) * (aspectRatio > 1.5 ? 0.25 : aspectRatio < 0.8 ? 0.45 : 0.35);
           ctx.strokeStyle = pick(pal, 2);
           ctx.globalAlpha = layer.opacity * 0.85;
           ctx.beginPath();
@@ -1152,6 +1183,11 @@ export function OptimizedCanvas({ width = 1280, height = 720, data, palette = ["
 
           ctx.imageSmoothingEnabled = prevSmoothing;
           (ctx as any).imageSmoothingQuality = prevQuality;
+        }
+
+        // Restore canvas state if mirror was applied
+        if (layer.mirrored || layer.mirroredVertical) {
+          ctx.restore();
         }
         
         // Reset opacity for next layer

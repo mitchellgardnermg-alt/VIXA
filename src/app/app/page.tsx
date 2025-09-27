@@ -9,7 +9,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { useSubscriptionStore } from "@/store/useSubscriptionStore";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Separator from "@radix-ui/react-separator";
-import { SpeakerLoudIcon, UploadIcon, PlayIcon, PauseIcon, DotFilledIcon, ImageIcon, BackpackIcon, StarIcon } from "@radix-ui/react-icons";
+import { SpeakerLoudIcon, UploadIcon, PlayIcon, PauseIcon, DotFilledIcon, ImageIcon, BackpackIcon, StarIcon, InputIcon, TrackNextIcon, TrackPreviousIcon, RotateCounterClockwiseIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/Button";
 import AuthUserButton from "@/components/auth/UserButton";
 import AuthSignInButton from "@/components/auth/SignInButton";
@@ -37,6 +37,9 @@ export default function App() {
   const [showPreview, setShowPreview] = useState(false);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
   const [showPricing, setShowPricing] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
 
   // Subscription management
   const { subscription, canExport, getRemainingExports, incrementExportUsage, setSubscription } = useSubscriptionStore();
@@ -252,6 +255,29 @@ export default function App() {
     recordedChunksRef.current = [];
   }
 
+  // Music control functions
+  function restartTrack() {
+    setCurrentTime(0);
+    // Add logic to restart audio track
+  }
+
+  function seekTo(time: number) {
+    setCurrentTime(time);
+    // Add logic to seek audio track
+  }
+
+  function handleVolumeChange(newVolume: number) {
+    setVolume(newVolume);
+    // Add logic to change audio volume
+  }
+
+  // Format time helper
+  function formatTime(seconds: number) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
   // Show loading spinner while checking authentication
   if (loading) {
     return (
@@ -281,23 +307,17 @@ export default function App() {
   // }
 
   return (
-    <div className="h-screen overflow-hidden bg-[#0A0F0C] text-[#E6F1EE]">
+    <div className="min-h-screen bg-[#0A0F0C] text-[#E6F1EE]">
       <header className="sticky top-0 z-10 px-4 pt-3 pb-2">
-        <div className="w-full rounded-xl border border-white/10 bg-[rgba(10,12,11,0.6)] backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.35)] px-3 py-2 flex items-center gap-3">
-          <div className="flex items-center gap-2 pr-2">
-            <Logo className="h-8 w-8" />
-            <div className="text-base font-semibold tracking-wide">VIXA</div>
-          </div>
-          <Separator.Root className="h-6 w-px bg-white/10" decorative orientation="vertical" />
-          <div className="flex items-center gap-2">
-            {isSignedIn ? (
-              <div className="hidden md:flex items-center gap-2 text-sm text-white/70">
-                <span>Welcome, {user?.email}</span>
-              </div>
-            ) : null}
-          </div>
-          <div className="ml-auto" />
-          <div className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-2 py-1">
+        <div className="w-full rounded-xl border border-white/10 bg-[rgba(10,12,11,0.6)] backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.35)] px-4 py-2 flex items-center justify-between gap-3">
+          {/* Left: Branding and Media Controls */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Logo className="h-8 w-8" />
+              <div className="text-base font-semibold tracking-wide">VIXA</div>
+            </div>
+            <Separator.Root className="h-6 w-px bg-white/10" decorative orientation="vertical" />
+            <div className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-2 py-1">
             <input ref={fileRef} type="file" accept="audio/mp3,.mp3" className="hidden" onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) playFile(f);
@@ -305,15 +325,6 @@ export default function App() {
             <Button variant="primary" size="md" onClick={() => fileRef.current?.click()}>
               <UploadIcon className="mr-2 h-4 w-4" /> Load
             </Button>
-            {isPlaying ? (
-              <Button variant="subtle" size="md" onClick={pause}>
-                <PauseIcon className="mr-2 h-4 w-4" /> Pause
-              </Button>
-            ) : (
-              <Button variant="subtle" size="md" onClick={resume}>
-                <PlayIcon className="mr-2 h-4 w-4" /> Play
-              </Button>
-            )}
             {isRecording ? (
               <Button variant="danger" size="md" onClick={stopRecording}>
                 <DotFilledIcon className="mr-2 h-4 w-4" /> Stop
@@ -336,21 +347,22 @@ export default function App() {
                 <DotFilledIcon className="mr-2 h-4 w-4" /> Rec
               </Button>
             )}
+            </div>
           </div>
-          <Separator.Root className="h-6 w-px bg-white/10" decorative orientation="vertical" />
+
+          {/* Right: Settings and User Controls */}
           <div className="flex items-center gap-2">
-            {/* Subscription Status */}
+            {/* Subscription Status - Compact */}
             {subscription && (
-              <div className="flex items-center gap-2 text-sm">
-                <StarIcon className="w-4 h-4 text-yellow-500" />
-                <span className="capitalize">{subscription.tier}</span>
-                {getRemainingExports() !== -1 && (
-                  <span className="text-white/60">
-                    ({getRemainingExports()} exports left today)
+              <div className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-white/5 border border-white/10">
+                <StarIcon className="w-3 h-3 text-yellow-500" />
+                <span className="capitalize font-medium">{subscription.tier}</span>
+                {getRemainingExports() !== -1 ? (
+                  <span className="text-white/60 hidden md:inline">
+                    ({getRemainingExports()})
                   </span>
-                )}
-                {getRemainingExports() === -1 && (
-                  <span className="text-green-500">Unlimited</span>
+                ) : (
+                  <span className="text-green-500 hidden md:inline">∞</span>
                 )}
               </div>
             )}
@@ -358,7 +370,7 @@ export default function App() {
             {/* Export settings */}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <Button variant="outline" size="md">Export</Button>
+                <Button variant="outline" size="sm">Export</Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content className="min-w-72 bg-neutral-900 text-neutral-100 border border-white/10 rounded p-3 space-y-3">
                 <div className="text-xs opacity-70">Aspect Ratio</div>
@@ -423,7 +435,9 @@ export default function App() {
             </DropdownMenu.Root>
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <Button variant="outline" size="md"><ImageIcon className="mr-2 h-4 w-4" /> Logo</Button>
+                <Button variant="outline" size="sm">
+                  <ImageIcon className="w-4 h-4" />
+                </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content className="min-w-56 bg-neutral-900 text-neutral-100 border border-white/10 rounded p-2 space-y-2">
                 <div className="text-xs opacity-70">Upload</div>
@@ -452,7 +466,9 @@ export default function App() {
 
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <Button variant="outline" size="md">Background</Button>
+                <Button variant="outline" size="sm">
+                  BG
+                </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content className="min-w-64 bg-neutral-900 text-neutral-100 border border-white/10 rounded p-2 space-y-2">
                 <div className="text-xs opacity-70">Color</div>
@@ -490,14 +506,105 @@ export default function App() {
           </div>
         </div>
       </header>
-      <div className="grid grid-cols-[minmax(0,1fr)_360px] gap-0 h-[calc(100vh-56px)]">
-        <div className="relative">
-          <div className="w-full h-full">
-            <OptimizedCanvas width={1280} height={720} data={data} palette={palette} onCanvasReady={(c) => { canvasRef.current = c; }} paused={showPreview} />
+      <div className="grid grid-cols-[minmax(0,1fr)_360px] gap-0">
+        <div className="relative flex flex-col">
+          <div className="w-full" style={{ height: `550px` }}>
+            <OptimizedCanvas width={exportWidth} height={exportHeight} data={data} palette={palette} onCanvasReady={(c) => { canvasRef.current = c; }} paused={showPreview} />
           </div>
           {!hasInput && (
             <div className="absolute inset-0 flex items-center justify-center text-white/60 text-sm">Load a file or use mic to start</div>
           )}
+          
+          {/* Music Control Section */}
+          <div className="bg-[rgba(10,12,11,0.8)] backdrop-blur-md border-t border-white/10 p-4">
+            <div className="max-w-4xl mx-auto">
+              {/* Track Info */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center">
+                    <SpeakerLoudIcon className="w-6 h-6 text-white/60" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium">Current Track</div>
+                    <div className="text-xs text-white/60">Audio File</div>
+                  </div>
+                </div>
+                <div className="text-sm text-white/60">
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mb-3">
+                <input
+                  type="range"
+                  min={0}
+                  max={duration || 100}
+                  value={currentTime}
+                  onChange={(e) => seekTo(Number(e.target.value))}
+                  className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer slider"
+                  style={{
+                    background: `linear-gradient(to right, #10b981 0%, #10b981 ${(currentTime / (duration || 1)) * 100}%, rgba(255,255,255,0.1) ${(currentTime / (duration || 1)) * 100}%, rgba(255,255,255,0.1) 100%)`
+                  }}
+                />
+              </div>
+
+              {/* Control Buttons */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {/* Volume Control */}
+                  <div className="flex items-center gap-2">
+                    <SpeakerLoudIcon className="w-4 h-4 text-white/60" />
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      value={volume}
+                      onChange={(e) => handleVolumeChange(Number(e.target.value))}
+                      className="w-20 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <span className="text-xs text-white/60 w-8">{Math.round(volume * 100)}%</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {/* Previous Track */}
+                  <Button variant="outline" size="sm" onClick={restartTrack}>
+                    <TrackPreviousIcon className="w-4 h-4" />
+                  </Button>
+
+                  {/* Play/Pause */}
+                  {isPlaying ? (
+                    <Button variant="primary" size="md" onClick={pause}>
+                      <PauseIcon className="w-5 h-5" />
+                    </Button>
+                  ) : (
+                    <Button variant="primary" size="md" onClick={resume}>
+                      <PlayIcon className="w-5 h-5" />
+                    </Button>
+                  )}
+
+                  {/* Next Track */}
+                  <Button variant="outline" size="sm">
+                    <TrackNextIcon className="w-4 h-4" />
+                  </Button>
+
+                  {/* Restart */}
+                  <Button variant="outline" size="sm" onClick={restartTrack}>
+                    <RotateCounterClockwiseIcon className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {/* Load File Button */}
+                  <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+                    <UploadIcon className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <aside className="border-l border-white/10 bg-black/30 h-[calc(100vh-56px)] overflow-y-auto">
           <Mixer />

@@ -4,7 +4,12 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 
-export default function AuthSignInButton() {
+interface AuthSignInButtonProps {
+  size?: "sm" | "md" | "lg";
+  className?: string;
+}
+
+export default function AuthSignInButton({ size = "md", className = "" }: AuthSignInButtonProps = {}) {
   const [showModal, setShowModal] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -53,7 +58,8 @@ export default function AuthSignInButton() {
     <>
       <Button 
         variant="primary" 
-        size="md"
+        size={size}
+        className={className}
         onClick={() => setShowModal(true)}
       >
         Sign In

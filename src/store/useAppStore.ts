@@ -32,13 +32,13 @@ type AppState = {
 
 export const useAppStore = create<AppState>((set) => ({
   layers: [
-    { id: "1", name: "Smoke", opacity: 1, blend: "normal", mode: "smoke", paletteId: "ocean-neon", visible: true },
-    { id: "2", name: "Waveform", opacity: 0.9, blend: "screen", mode: "waveform", paletteId: "ocean-neon", visible: true },
+    { id: "1", name: "Smoke", opacity: 1, blend: "normal", mode: "smoke", paletteId: "blue-ocean", visible: true, mirrored: false, mirroredVertical: false },
+    { id: "2", name: "Waveform", opacity: 0.9, blend: "screen", mode: "waveform", paletteId: "blue-ocean", visible: true, mirrored: false, mirroredVertical: false },
   ],
   logo: { x: 0.92, y: 0.08, scale: 0.5, opacity: 0.8 },
   background: { color: "#07140e", src: undefined, fit: "cover", opacity: 1 },
   addLayer: () => set((s) => ({
-    layers: s.layers.concat({ id: nanoid(6), name: `Layer ${s.layers.length + 1}`, opacity: 1, blend: "normal", mode: "bars", paletteId: "ocean-neon", visible: true }),
+    layers: s.layers.concat({ id: nanoid(6), name: `Layer ${s.layers.length + 1}`, opacity: 1, blend: "normal", mode: "bars", paletteId: "blue-ocean", visible: true, mirrored: false, mirroredVertical: false }),
   })),
   removeLayer: (id) => set((s) => ({ layers: s.layers.filter((l) => l.id !== id) })),
   updateLayer: (id, partial) => set((s) => ({ layers: s.layers.map((l) => (l.id === id ? { ...l, ...partial } : l)) })),

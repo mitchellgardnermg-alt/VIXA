@@ -129,7 +129,7 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center gap-2">
               <CheckIcon className="h-4 w-4 text-emerald-400" />
-              Free forever plan
+              Free plan
             </div>
             <div className="flex items-center gap-2">
               <CheckIcon className="h-4 w-4 text-emerald-400" />
