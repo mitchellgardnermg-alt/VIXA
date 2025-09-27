@@ -365,8 +365,8 @@ export default function Home() {
               )}
             </div>
             <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => router.push('/pricing')}
                 className="text-white/70 hover:text-white"
@@ -374,8 +374,8 @@ export default function Home() {
                 Pricing
               </Button>
               {!isSignedIn && (
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="sm"
                   onClick={() => setShowAppInterface(false)}
                   className="text-white/70 hover:text-white"
@@ -389,6 +389,18 @@ export default function Home() {
                 <UploadIcon className="w-4 h-4 mr-2" />
                 Load
               </Button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    playFile(file);
+                  }
+                }}
+              />
 
               {/* Record Button */}
               <Button 
@@ -408,7 +420,7 @@ export default function Home() {
                     Logo
                   </Button>
                 </DropdownMenu.Trigger>
-                <DropdownMenu.Content className="w-64 p-4 bg-neutral-900 border border-white/10">
+                <DropdownMenu.Content className="w-80 p-4 bg-neutral-900 border border-white/10">
                   <div className="text-xs opacity-70 mb-2">Logo Image</div>
                   <input type="file" accept="image/*" className="mb-2" onChange={(e) => {
                     const f = e.target.files?.[0];
@@ -417,51 +429,146 @@ export default function Home() {
                     reader.onload = () => setLogo({ src: String(reader.result) });
                     reader.readAsDataURL(f);
                   }} />
-                  <div className="flex gap-2 pt-1">
-                    <Button size="sm" variant="ghost" onClick={() => setLogo({ src: undefined })}>Remove Logo</Button>
+                  
+                  {/* Logo Position */}
+                  <div className="mb-3">
+                    <div className="text-xs opacity-70 mb-2">Position</div>
+                    <div className="grid grid-cols-3 gap-2 mb-2">
+                      <Button size="sm" variant="ghost" onClick={() => setLogo({ x: 0.02, y: 0.02 })}>Top Left</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setLogo({ x: 0.5, y: 0.02 })}>Top Center</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setLogo({ x: 0.98, y: 0.02 })}>Top Right</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setLogo({ x: 0.02, y: 0.5 })}>Middle Left</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setLogo({ x: 0.5, y: 0.5 })}>Center</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setLogo({ x: 0.98, y: 0.5 })}>Middle Right</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setLogo({ x: 0.02, y: 0.98 })}>Bottom Left</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setLogo({ x: 0.5, y: 0.98 })}>Bottom Center</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setLogo({ x: 0.98, y: 0.98 })}>Bottom Right</Button>
+                    </div>
                   </div>
-                  <div className="text-xs opacity-70 pt-1">Logo Size</div>
+
+                  {/* Manual Position */}
+                  <div className="mb-3">
+                    <div className="text-xs opacity-70 mb-2">Manual Position</div>
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <div className="text-xs opacity-70 mb-1">X: {Math.round((logo.x || 0.5) * 100)}%</div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.01}
+                          value={logo.x || 0.5}
+                          onChange={(e) => setLogo({ x: Number(e.target.value) })}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-xs opacity-70 mb-1">Y: {Math.round((logo.y || 0.5) * 100)}%</div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.01}
+                          value={logo.y || 0.5}
+                          onChange={(e) => setLogo({ y: Number(e.target.value) })}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-xs opacity-70 pt-1">Logo Size: {Math.round((logo.scale || 1) * 100)}%</div>
                   <input type="range" min={0.1} max={2} step={0.1} value={logo.scale || 1} onChange={(e) => setLogo({ scale: Number(e.target.value) })} />
-                  <div className="text-xs opacity-70 pt-1">Logo Opacity</div>
+                  <div className="text-xs opacity-70 pt-1">Logo Opacity: {Math.round((logo.opacity || 1) * 100)}%</div>
                   <input type="range" min={0} max={1} step={0.01} value={logo.opacity || 1} onChange={(e) => setLogo({ opacity: Number(e.target.value) })} />
+                  
+                  <div className="flex gap-2 pt-2">
+                    <Button size="sm" variant="destructive" onClick={() => setLogo({ src: undefined })}>Remove Logo</Button>
+                  </div>
                 </DropdownMenu.Content>
               </DropdownMenu.Root>
 
               {/* Background Button */}
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="outline" size="sm">
                     <ImageIcon className="w-4 h-4 mr-2" />
                     Background
                   </Button>
                 </DropdownMenu.Trigger>
-                <DropdownMenu.Content className="w-64 p-4 bg-neutral-900 border border-white/10">
-                  <div className="text-xs opacity-70 mb-2">Background Image</div>
-                  <input type="file" accept="image/*" className="mb-2" onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (!f) return;
-                    const reader = new FileReader();
-                    reader.onload = () => setBackground({ src: String(reader.result) });
-                    reader.readAsDataURL(f);
-                  }} />
-                  <div className="flex gap-2 pt-1">
-                    <Button size="sm" variant="ghost" onClick={() => setBackground({ src: undefined })}>Remove Image</Button>
+                <DropdownMenu.Content className="w-80 p-4 bg-neutral-900 border border-white/10">
+                  {/* Background Color */}
+                  <div className="mb-4">
+                    <div className="text-xs opacity-70 mb-2">Background Color</div>
+                    <div className="grid grid-cols-8 gap-2 mb-2">
+                      {[
+                        '#000000', '#1a1a1a', '#333333', '#666666', '#999999', '#cccccc', '#ffffff',
+                        '#ff0000', '#ff8000', '#ffff00', '#80ff00', '#00ff00', '#00ff80', '#00ffff', '#0080ff',
+                        '#0000ff', '#8000ff', '#ff00ff', '#ff0080', '#ff4040', '#ff8040', '#ffff40', '#80ff40',
+                        '#40ff40', '#40ff80', '#40ffff', '#4080ff', '#4040ff', '#8040ff', '#ff40ff', '#ff4080'
+                      ].map((color) => (
+                        <button
+                          key={color}
+                          className="w-8 h-8 rounded border-2 border-white/20 hover:border-white/60 transition-colors"
+                          style={{ backgroundColor: color }}
+                          onClick={() => setBackground({ color, src: undefined })}
+                          title={color}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={background.color || '#000000'}
+                        onChange={(e) => setBackground({ color: e.target.value, src: undefined })}
+                        className="w-12 h-8 rounded border border-white/20"
+                      />
+                      <input
+                        type="text"
+                        value={background.color || '#000000'}
+                        onChange={(e) => setBackground({ color: e.target.value, src: undefined })}
+                        className="flex-1 px-2 py-1 bg-white/10 border border-white/20 rounded text-xs"
+                        placeholder="#000000"
+                      />
+                    </div>
                   </div>
-                  <div className="text-xs opacity-70 pt-1">Fit</div>
-                  <div className="flex gap-2">
-                    {(["cover", "contain", "stretch"] as const).map((k) => (
-                      <Button key={k} size="sm" variant={background.fit === k ? "subtle" : "ghost"} onClick={() => setBackground({ fit: k })}>{k}</Button>
-                    ))}
+
+                  <Separator.Root className="my-4 bg-white/10" />
+
+                  {/* Background Image */}
+                  <div className="mb-3">
+                    <div className="text-xs opacity-70 mb-2">Background Image</div>
+                    <input type="file" accept="image/*" className="mb-2" onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      const reader = new FileReader();
+                      reader.onload = () => setBackground({ src: String(reader.result) });
+                      reader.readAsDataURL(f);
+                    }} />
+                    <div className="flex gap-2 pt-1">
+                      <Button size="sm" variant="ghost" onClick={() => setBackground({ src: undefined })}>Remove Image</Button>
+                    </div>
                   </div>
-                  <div className="text-xs opacity-70">Image Opacity</div>
-                  <input type="range" min={0} max={1} step={0.01} value={background.opacity} onChange={(e) => setBackground({ opacity: Number(e.target.value) })} />
+
+                  {background.src && (
+                    <>
+                      <div className="text-xs opacity-70 pt-1">Fit</div>
+                      <div className="flex gap-2 mb-2">
+                        {(["cover", "contain", "stretch"] as const).map((k) => (
+                          <Button key={k} size="sm" variant={background.fit === k ? "subtle" : "ghost"} onClick={() => setBackground({ fit: k })}>{k}</Button>
+                        ))}
+                      </div>
+                      <div className="text-xs opacity-70">Image Opacity: {Math.round(background.opacity * 100)}%</div>
+                      <input type="range" min={0} max={1} step={0.01} value={background.opacity} onChange={(e) => setBackground({ opacity: Number(e.target.value) })} />
+                    </>
+                  )}
                 </DropdownMenu.Content>
               </DropdownMenu.Root>
 
               {/* Export Settings Button */}
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="outline" size="sm">
                     <UploadIcon className="w-4 h-4 mr-2" />
                     Export
                   </Button>
