@@ -62,14 +62,25 @@
 
 ### Step 4: Configure Cloudinary
 
-1. **Update Cloudinary Settings**
-   - Your Cloudinary credentials are already in the code
-   - For production, consider using environment variables
+1. **Create Cloudinary Account**
+   - Go to [cloudinary.com](https://cloudinary.com) and create a free account
+   - Navigate to your Dashboard to get your credentials
 
-2. **Test Video Conversion**
+2. **Set Environment Variables in Vercel**
+   - Go to your Vercel project dashboard
+   - Navigate to Settings → Environment Variables
+   - Add the following variables:
+     ```
+     CLOUDINARY_CLOUD_NAME=your_cloud_name
+     CLOUDINARY_API_KEY=your_api_key  
+     CLOUDINARY_API_SECRET=your_api_secret
+     ```
+
+3. **Test Video Conversion**
    - Record a video in your app
    - Test the MP4 conversion
    - Verify it works correctly
+   - Check Cloudinary dashboard for uploaded videos
 
 ## 🔧 Production Checklist
 
@@ -77,6 +88,9 @@
 - [ ] `STRIPE_SECRET_KEY` (live key)
 - [ ] `STRIPE_PUBLISHABLE_KEY` (live key)
 - [ ] `STRIPE_WEBHOOK_SECRET`
+- [ ] `CLOUDINARY_CLOUD_NAME`
+- [ ] `CLOUDINARY_API_KEY`
+- [ ] `CLOUDINARY_API_SECRET`
 - [ ] `NEXT_PUBLIC_APP_URL` (your domain)
 - [ ] `REDIS_URL` (optional, for caching)
 
