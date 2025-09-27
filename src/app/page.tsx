@@ -44,6 +44,7 @@ export default function Home() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
+  const [showAppInterface, setShowAppInterface] = useState(false);
 
   // Subscription management
   const { subscription, canExport, getRemainingExports, incrementExportUsage, setSubscription } = useSubscriptionStore();
@@ -126,8 +127,8 @@ export default function Home() {
     }
   ];
 
-  // If signed in, show the full featured app interface
-  if (isSignedIn) {
+  // If signed in OR "Try Free" clicked, show the full featured app interface
+  if (isSignedIn || showAppInterface) {
     const exportWidth = 1280;
     const exportHeight = 720;
 
@@ -223,6 +224,16 @@ export default function Home() {
               >
                 Pricing
               </Button>
+              {!isSignedIn && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setShowAppInterface(false)}
+                  className="text-white/70 hover:text-white"
+                >
+                  Back to Landing
+                </Button>
+              )}
               
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
@@ -474,7 +485,7 @@ export default function Home() {
               variant="primary" 
               size="lg" 
               className="text-lg px-8 py-4"
-              onClick={() => router.push('/app')}
+              onClick={() => setShowAppInterface(true)}
             >
               Try Free
             </Button>
@@ -588,7 +599,7 @@ export default function Home() {
               variant="primary" 
               size="lg" 
               className="text-lg px-8 py-4"
-              onClick={() => router.push('/app')}
+              onClick={() => setShowAppInterface(true)}
             >
               Try Free
             </Button>

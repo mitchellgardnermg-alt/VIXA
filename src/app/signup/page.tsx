@@ -37,7 +37,7 @@ export default function SignUpPage() {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // After successful payment, redirect to app
-      router.push('/app');
+      router.push('/');
     } catch (error) {
       console.error('Payment failed:', error);
       alert('Payment failed. Please try again.');
