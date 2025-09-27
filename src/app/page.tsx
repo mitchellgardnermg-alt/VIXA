@@ -235,6 +235,50 @@ export default function Home() {
                 </Button>
               )}
               
+              {/* Load File Button */}
+              <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+                <UploadIcon className="w-4 h-4 mr-2" />
+                Load
+              </Button>
+
+              {/* Record Button */}
+              <Button 
+                variant={isRecording ? "destructive" : "outline"} 
+                size="sm" 
+                onClick={() => setIsRecording(!isRecording)}
+              >
+                <DotFilledIcon className="w-4 h-4 mr-2" />
+                {isRecording ? 'Stop' : 'Record'}
+              </Button>
+
+              {/* Logo Upload Button */}
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <Button variant="outline" size="sm">
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    Logo
+                  </Button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content className="w-64 p-4 bg-neutral-900 border border-white/10">
+                  <div className="text-xs opacity-70 mb-2">Logo Image</div>
+                  <input type="file" accept="image/*" className="mb-2" onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    const reader = new FileReader();
+                    reader.onload = () => setLogo({ src: String(reader.result) });
+                    reader.readAsDataURL(f);
+                  }} />
+                  <div className="flex gap-2 pt-1">
+                    <Button size="sm" variant="ghost" onClick={() => setLogo({ src: undefined })}>Remove Logo</Button>
+                  </div>
+                  <div className="text-xs opacity-70 pt-1">Logo Size</div>
+                  <input type="range" min={0.1} max={2} step={0.1} value={logo.scale || 1} onChange={(e) => setLogo({ scale: Number(e.target.value) })} />
+                  <div className="text-xs opacity-70 pt-1">Logo Opacity</div>
+                  <input type="range" min={0} max={1} step={0.01} value={logo.opacity || 1} onChange={(e) => setLogo({ opacity: Number(e.target.value) })} />
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+
+              {/* Background Button */}
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
                   <Button variant="ghost" size="sm">
