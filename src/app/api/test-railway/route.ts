@@ -2,66 +2,48 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const VIDEO_ENCODING_API_URL = process.env.VIDEO_ENCODING_API_URL || 'https://vea-production.up.railway.app';
+const RAILWAY_API_URL = process.env.VIDEO_ENCODING_API_URL || 'https://vea-production.up.railway.app';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    console.log('Testing Railway API health...');
-    const healthResponse = await fetch(`${VIDEO_ENCODING_API_URL}/health`);
-    const healthData = await healthResponse.json();
-    
-    return NextResponse.json({
-      success: true,
-      health: healthData,
-      apiUrl: VIDEO_ENCODING_API_URL
+    console.log('🧪 Testing Railway API endpoints...');
+
+    // Test health endpoint
+    console.log('🔍 Testing health endpoint...');
+    const healthResponse = await fetch(`${RAILWAY_API_URL}/health`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(5000),
     });
-  } catch (error) {
-    console.error('Railway API test failed:', error);
-    return NextResponse.json({
-      success: false,
-      error: error.message,
-      apiUrl: VIDEO_ENCODING_API_URL
-    }, { status: 500 });
-  }
-}
 
-export async function POST(req: NextRequest) {
-  try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
-    
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    console.log('Health check result:', {
+      status: healthResponse.status,
+      ok: healthResponse.ok,
+      statusText: healthResponse.statusText
+    });
+
+    if (healthResponse.ok) {
+      const healthText = await healthResponse.text();
+      console.log('Health response:', healthText);
     }
 
-    console.log('Testing Railway API with file:', {
-      name: file.name,
-      size: file.size,
-      type: file.type
+    return NextResponse.json({
+      railwayApiUrl: RAILWAY_API_URL,
+      healthStatus: healthResponse.status,
+      healthOk: healthResponse.ok,
+      endpoints: {
+        health: `${RAILWAY_API_URL}/health`,
+        convert: `${RAILWAY_API_URL}/convert`,
+        download: `${RAILWAY_API_URL}/download/:filename`
+      },
+      message: healthResponse.ok ? 'Railway API is healthy!' : 'Railway API health check failed'
     });
 
-    const testFormData = new FormData();
-    testFormData.append('video', file);
-    
-    const response = await fetch(`${VIDEO_ENCODING_API_URL}/convert`, {
-      method: 'POST',
-      body: testFormData,
-    });
-    
-    const responseText = await response.text();
-    
-    return NextResponse.json({
-      success: response.ok,
-      status: response.status,
-      statusText: response.statusText,
-      response: responseText,
-      headers: Object.fromEntries(response.headers.entries())
-    });
   } catch (error) {
-    console.error('Railway API test failed:', error);
+    console.error('❌ Railway API test failed:', error);
     return NextResponse.json({
-      success: false,
-      error: error.message
+      error: error.message,
+      railwayApiUrl: RAILWAY_API_URL,
+      message: 'Railway API test failed'
     }, { status: 500 });
   }
 }
