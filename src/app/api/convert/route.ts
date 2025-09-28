@@ -36,6 +36,14 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
     const responseClone = response.clone();
     const responseText = await responseClone.text();
     console.log('Railway API raw response (first 200 chars):', responseText.substring(0, 200));
+    console.log('Railway API raw response length:', responseText.length);
+    
+    // Check if response is binary (video file) or text (JSON)
+    if (responseText.length < 1000 && (responseText.includes('{') || responseText.includes('success'))) {
+      console.log('Railway API returned JSON response:', responseText);
+    } else {
+      console.log('Railway API returned binary/video response');
+    }
     
     if (!response.ok) {
       const errorText = await response.text();
