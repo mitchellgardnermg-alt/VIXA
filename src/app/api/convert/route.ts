@@ -7,48 +7,62 @@ const VIDEO_ENCODING_API_URL = process.env.VIDEO_ENCODING_API_URL || 'https://ve
 
 // Function to convert video using Railway video encoding API
 async function convertWithRailwayAPI(file: File): Promise<Buffer> {
-  console.log('Starting Railway API conversion for file:', file.name, 'size:', file.size);
+  console.log('Starting Railway API conversion for file:', file.name, 'size:', file.size, 'type:', file.type);
+  
+  // Check if the file is a valid video file
+  if (!file.type.startsWith('video/')) {
+    throw new Error(`Invalid file type: ${file.type}. Only video files are supported.`);
+  }
   
   const formData = new FormData();
   formData.append('video', file);
   
   console.log('Sending request to:', `${VIDEO_ENCODING_API_URL}/convert`);
   
-  const response = await fetch(`${VIDEO_ENCODING_API_URL}/convert`, {
-    method: 'POST',
-    body: formData,
-  });
-  
-  console.log('Railway API response status:', response.status);
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Railway API error response:', errorText);
-    throw new Error(`Railway API conversion failed: ${response.status} ${errorText}`);
+  try {
+    const response = await fetch(`${VIDEO_ENCODING_API_URL}/convert`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+    
+    console.log('Railway API response status:', response.status);
+    console.log('Railway API response headers:', Object.fromEntries(response.headers.entries()));
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Railway API error response:', errorText);
+      throw new Error(`Railway API conversion failed: ${response.status} ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('Railway API result:', result);
+    
+    if (!result.success) {
+      throw new Error(`Conversion failed: ${result.message}`);
+    }
+    
+    // Download the converted file
+    const downloadUrl = result.downloadUrl || result.download_url || result.url;
+    if (!downloadUrl) {
+      throw new Error('No download URL provided by Railway API');
+    }
+    
+    console.log('Downloading converted file from:', downloadUrl);
+    const downloadResponse = await fetch(downloadUrl);
+    if (!downloadResponse.ok) {
+      throw new Error(`Failed to download converted video: ${downloadResponse.status}`);
+    }
+    
+    const arrayBuffer = await downloadResponse.arrayBuffer();
+    console.log('Downloaded file size:', arrayBuffer.byteLength);
+    return Buffer.from(arrayBuffer);
+  } catch (error) {
+    console.error('Railway API conversion error:', error);
+    throw error;
   }
-  
-  const result = await response.json();
-  console.log('Railway API result:', result);
-  
-  if (!result.success) {
-    throw new Error(`Conversion failed: ${result.message}`);
-  }
-  
-  // Download the converted file
-  const downloadUrl = result.downloadUrl || result.download_url || result.url;
-  if (!downloadUrl) {
-    throw new Error('No download URL provided by Railway API');
-  }
-  
-  console.log('Downloading converted file from:', downloadUrl);
-  const downloadResponse = await fetch(downloadUrl);
-  if (!downloadResponse.ok) {
-    throw new Error(`Failed to download converted video: ${downloadResponse.status}`);
-  }
-  
-  const arrayBuffer = await downloadResponse.arrayBuffer();
-  console.log('Downloaded file size:', arrayBuffer.byteLength);
-  return Buffer.from(arrayBuffer);
 }
 
 // Function to check if Railway encoding API is available
