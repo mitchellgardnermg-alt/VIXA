@@ -19,8 +19,19 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
   const fileBuffer = await file.arrayBuffer();
   const webmBlob = new Blob([fileBuffer], { type: 'video/webm' });
   
+  // Generate UUID-style filename like the working example
+  const generateUUID = () => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+  
+  const uuidFilename = `${generateUUID()}.webm`;
+  
   // Create a new File object with proper WebM naming and MIME type
-  const webmFile = new File([webmBlob], 'vixa-recording.webm', { 
+  const webmFile = new File([webmBlob], uuidFilename, { 
     type: 'video/webm',
     lastModified: Date.now()
   });
