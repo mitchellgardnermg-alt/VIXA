@@ -14,11 +14,9 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
     throw new Error(`Invalid file type: ${file.type}. Only video files are supported.`);
   }
   
-  // Send the file directly to Railway API with proper parameters
+  // Send the file directly to Railway API (no extra parameters)
   const formData = new FormData();
   formData.append('video', file);
-  formData.append('output_format', 'mp4');
-  formData.append('quality', 'high');
   
   console.log('Sending request to:', `${VIDEO_ENCODING_API_URL}/convert`);
   console.log('FormData contents:', Array.from(formData.entries()).map(([key, value]) => [key, value instanceof File ? `${value.name} (${value.size} bytes)` : value]));
