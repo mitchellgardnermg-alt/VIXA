@@ -191,27 +191,17 @@ export default function Home() {
         sizeMB: (webmBlob.size / 1024 / 1024).toFixed(2)
       });
       
-      setConversionProgress(10);
-      console.log('📊 Progress: 10% - Starting compression...');
-      
-      // Compress video before upload
-      const compressedBlob = await compressVideo(webmBlob, 0.6);
-      console.log('🗜️ Compression complete:', {
-        originalSize: webmBlob.size,
-        compressedSize: compressedBlob.size,
-        compressionRatio: ((1 - compressedBlob.size / webmBlob.size) * 100).toFixed(1) + '%'
-      });
       setConversionProgress(30);
+      console.log('📊 Progress: 30% - Sending to Railway API...');
       
+      // Send original WebM blob directly (no compression to avoid format corruption)
       const formData = new FormData();
-      formData.append('file', compressedBlob, 'recording.webm');
-      formData.append('width', exportWidth.toString());
-      formData.append('height', exportHeight.toString());
+      formData.append('file', webmBlob, 'recording.webm');
       
       console.log('📤 Sending to conversion API:', {
         width: exportWidth,
         height: exportHeight,
-        fileSize: compressedBlob.size
+        fileSize: webmBlob.size
       });
       setConversionProgress(50);
       
@@ -233,27 +223,14 @@ export default function Home() {
         console.error('❌ Conversion failed:', errorText);
         throw new Error(`Conversion failed: ${response.status} - ${errorText}`);
       }
-      
+
       const result = await response.blob();
       console.log('✅ Conversion successful:', {
-        originalSize: compressedBlob.size,
+        originalSize: webmBlob.size,
         convertedSize: result.size,
         type: result.type
       });
-      
-      // Check if Railway actually converted the file
-      if (result.type.includes('webm') && convertToMp4) {
-        console.warn('⚠️ Railway returned WebM file instead of MP4 - conversion may not be working');
-        console.log('Falling back to original WebM file');
-        
-        // Return the original WebM file instead of the "converted" WebM
-        const originalBuffer = Buffer.from(await compressedBlob.arrayBuffer());
-        const originalWebMBlob = new Blob([originalBuffer], { type: 'video/webm' });
-        
-        setConversionProgress(100);
-        return originalWebMBlob;
-      }
-      
+
       setConversionProgress(100);
       return result;
     }
