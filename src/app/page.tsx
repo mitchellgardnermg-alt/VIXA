@@ -215,7 +215,8 @@ export default function Home() {
         console.log('📡 Railway API Response:', {
           status: response.status,
           statusText: response.statusText,
-          ok: response.ok
+          ok: response.ok,
+          contentType: response.headers.get('content-type')
         });
         
         setConversionProgress(80);
@@ -226,16 +227,61 @@ export default function Home() {
           throw new Error(`Railway conversion failed: ${response.status} - ${errorText}`);
         }
 
-        const result = await response.blob();
-        console.log('✅ Railway conversion successful:', {
-          originalSize: webmBlob.size,
-          convertedSize: result.size,
-          type: result.type
-        });
-
-        setConversionProgress(100);
-        return result;
+        // Check if Railway returned JSON with download URL or direct file
+        const contentType = response.headers.get('content-type');
         
+        if (contentType?.includes('application/json')) {
+          console.log('📄 Railway returned JSON response, parsing...');
+          const jsonResult = await response.json();
+          console.log('📋 Railway JSON result:', jsonResult);
+          
+          if (!jsonResult.success && !jsonResult.ok) {
+            throw new Error(`Railway conversion failed: ${jsonResult.message || 'Unknown error'}`);
+          }
+          
+          // Get download URL from JSON response
+          const downloadUrl = jsonResult.downloadUrl || jsonResult.download_url || jsonResult.url;
+          if (!downloadUrl) {
+            throw new Error('No download URL provided by Railway API');
+          }
+          
+          // Construct full download URL if needed
+          let fullDownloadUrl = downloadUrl;
+          if (downloadUrl.startsWith('/download/')) {
+            fullDownloadUrl = `https://vea-production.up.railway.app${downloadUrl}`;
+          } else if (!downloadUrl.startsWith('http')) {
+            fullDownloadUrl = `https://vea-production.up.railway.app/download/${downloadUrl}`;
+          }
+          
+          console.log('⬇️ Downloading converted file from:', fullDownloadUrl);
+          
+          // Download the converted file
+          const downloadResponse = await fetch(fullDownloadUrl);
+          if (!downloadResponse.ok) {
+            throw new Error(`Failed to download converted video: ${downloadResponse.status}`);
+          }
+          
+          const result = await downloadResponse.blob();
+          console.log('✅ Railway conversion successful:', {
+            originalSize: webmBlob.size,
+            convertedSize: result.size,
+            type: result.type
+          });
+          
+          setConversionProgress(100);
+          return result;
+        } else {
+          // Railway returned the file directly
+          const result = await response.blob();
+          console.log('✅ Railway conversion successful (direct file):', {
+            originalSize: webmBlob.size,
+            convertedSize: result.size,
+            type: result.type
+          });
+          
+          setConversionProgress(100);
+          return result;
+        }        
       } catch (error) {
         console.error('❌ Direct Railway upload failed:', error);
         console.log('🔄 Falling back to original WebM file');
