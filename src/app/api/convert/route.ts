@@ -72,6 +72,20 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
       throw new Error(`Conversion failed: ${result.message}`);
     }
     
+    // Check if Railway actually converted the file
+    if (!result.downloadUrl && !result.download_url && !result.url) {
+      console.log('No download URL in response, checking if file was processed...');
+      
+      // If Railway processed the file but didn't provide a download URL,
+      // it might have returned the converted file directly in the response
+      if (response.headers.get('content-type')?.includes('video/mp4')) {
+        console.log('Response contains MP4 content directly');
+        const arrayBuffer = await response.arrayBuffer();
+        console.log('Direct MP4 response size:', arrayBuffer.byteLength);
+        return Buffer.from(arrayBuffer);
+      }
+    }
+    
     // Download the converted file
     const downloadUrl = result.downloadUrl || result.download_url || result.url;
     if (!downloadUrl) {
@@ -86,7 +100,20 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
     
     const arrayBuffer = await downloadResponse.arrayBuffer();
     console.log('Downloaded file size:', arrayBuffer.byteLength);
-    return Buffer.from(arrayBuffer);
+    console.log('Download response content-type:', downloadResponse.headers.get('content-type'));
+    
+    // Validate that we got an actual MP4 file
+    const buffer = Buffer.from(arrayBuffer);
+    const mp4Signature = buffer.toString('hex', 0, 4);
+    console.log('File signature (first 4 bytes):', mp4Signature);
+    
+    // Check for MP4 file signature (ftyp box)
+    if (mp4Signature !== '66747970' && !buffer.toString('ascii', 4, 8).includes('mp4')) {
+      console.warn('Warning: Downloaded file does not appear to be a valid MP4');
+      console.log('File starts with:', buffer.toString('hex', 0, 16));
+    }
+    
+    return buffer;
   } catch (error) {
     console.error('Railway API conversion error:', error);
     throw error;
@@ -157,13 +184,13 @@ export async function POST(req: NextRequest) {
         console.error("Railway API conversion failed:", error);
         console.log("Falling back to original file due to conversion error");
         
-        // Fallback to original file
+        // Fallback to original file with proper WebM naming
         const buffer = Buffer.from(await file.arrayBuffer());
         return new Response(buffer, {
           status: 200,
           headers: {
-            "Content-Type": file.type || "video/webm",
-            "Content-Disposition": `attachment; filename=recording.${file.name.split('.').pop() || 'webm'}`,
+            "Content-Type": "video/webm", // Always return as WebM when conversion fails
+            "Content-Disposition": `attachment; filename=vixa-recording.webm`,
             "Content-Length": buffer.length.toString(),
           },
         });
@@ -174,8 +201,8 @@ export async function POST(req: NextRequest) {
       return new Response(buffer, {
         status: 200,
         headers: {
-          "Content-Type": file.type || "video/webm",
-          "Content-Disposition": `attachment; filename=recording.${file.name.split('.').pop() || 'webm'}`,
+          "Content-Type": "video/webm", // Always return as WebM
+          "Content-Disposition": `attachment; filename=vixa-recording.webm`,
           "Content-Length": buffer.length.toString(),
         },
       });
@@ -197,8 +224,8 @@ export async function POST(req: NextRequest) {
         return new Response(buffer, {
           status: 200,
           headers: {
-            "Content-Type": file.type || "video/webm",
-            "Content-Disposition": `attachment; filename=recording.${file.name.split('.').pop() || 'webm'}`,
+            "Content-Type": "video/webm", // Always return as WebM
+            "Content-Disposition": `attachment; filename=vixa-recording.webm`,
           },
         });
       }
