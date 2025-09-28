@@ -182,9 +182,9 @@ export default function Home() {
       });
     }
 
-    // Server-side conversion to MP4 using Railway API with progress tracking
+    // Direct Railway API conversion (bypasses Vercel size limits)
     async function convertToMp4Blob(webmBlob: Blob): Promise<Blob> {
-      console.log('🎬 Starting video conversion process...');
+      console.log('🎬 Starting direct Railway conversion...');
       console.log('📁 Original file:', {
         size: webmBlob.size,
         type: webmBlob.type,
@@ -192,49 +192,56 @@ export default function Home() {
       });
       
       setConversionProgress(30);
-      console.log('📊 Progress: 30% - Sending to Railway API...');
+      console.log('📊 Progress: 30% - Uploading directly to Railway...');
       
-      // Send original WebM blob directly (no compression to avoid format corruption)
-      const formData = new FormData();
-      formData.append('file', webmBlob, 'recording.webm');
-      
-      console.log('📤 Sending to conversion API:', {
-        width: exportWidth,
-        height: exportHeight,
-        fileSize: webmBlob.size
+      // Create proper WebM file for Railway
+      const webmFile = new File([webmBlob], 'vixa-recording.webm', { 
+        type: 'video/webm' 
       });
+      
+      const formData = new FormData();
+      formData.append('video', webmFile);
+      
+      console.log('📤 Uploading to Railway API directly...');
       setConversionProgress(50);
       
-      const response = await fetch('/api/convert', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      console.log('📡 API Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
-      
-      setConversionProgress(80);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Conversion failed:', errorText);
-        throw new Error(`Conversion failed: ${response.status} - ${errorText}`);
+      try {
+        // Upload directly to Railway API (bypasses Vercel serverless function)
+        const response = await fetch('https://vea-production.up.railway.app/convert', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        console.log('📡 Railway API Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok
+        });
+        
+        setConversionProgress(80);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ Railway conversion failed:', errorText);
+          throw new Error(`Railway conversion failed: ${response.status} - ${errorText}`);
+        }
+
+        const result = await response.blob();
+        console.log('✅ Railway conversion successful:', {
+          originalSize: webmBlob.size,
+          convertedSize: result.size,
+          type: result.type
+        });
+
+        setConversionProgress(100);
+        return result;
+        
+      } catch (error) {
+        console.error('❌ Direct Railway upload failed:', error);
+        console.log('🔄 Falling back to original WebM file');
+        return webmBlob;
       }
-
-      const result = await response.blob();
-      console.log('✅ Conversion successful:', {
-        originalSize: webmBlob.size,
-        convertedSize: result.size,
-        type: result.type
-      });
-
-      setConversionProgress(100);
-      return result;
     }
-
     async function startRecording() {
       console.log('🎥 Starting recording process...');
       const canvas = canvasRef.current;
