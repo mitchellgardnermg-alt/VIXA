@@ -370,14 +370,14 @@ export default function Home() {
         sizeMB: (previewBlob.size / 1024 / 1024).toFixed(2)
       });
       
-      // Check subscription limits
-      if (!canExport()) {
-        console.log('🚫 Export limit reached, showing pricing modal');
-        setShowPricing(true);
-        return;
-      }
+      // Check subscription limits (temporarily disabled for testing)
+      // if (!canExport()) {
+      //   console.log('🚫 Export limit reached, showing pricing modal');
+      //   setShowPricing(true);
+      //   return;
+      // }
       
-      console.log('✅ Export allowed, proceeding...');
+      console.log('✅ Export allowed (limits disabled for testing), proceeding...');
       
       try {
         setIsRemuxing(true);
@@ -407,9 +407,9 @@ export default function Home() {
           console.log(`📥 ${ext.toUpperCase()} download initiated`);
         }
         
-        // Increment usage counter
-        incrementExportUsage();
-        console.log('📊 Export usage incremented');
+        // Increment usage counter (temporarily disabled for testing)
+        // incrementExportUsage();
+        console.log('📊 Export usage incremented (disabled for testing)');
         
         // Close preview
         setShowPreview(false);
