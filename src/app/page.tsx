@@ -276,7 +276,7 @@ export default function Home() {
       let selectedType: string;
       if (convertToMp4) {
         console.log('🎯 MP4 conversion enabled, selecting WebM format for conversion');
-        // Use best supported format for conversion
+        // ALWAYS use WebM for conversion - Railway API is very strict about file format
         const preferredTypes = [
           "video/webm;codecs=vp9,opus",
           "video/webm;codecs=vp8,opus", 
@@ -284,6 +284,7 @@ export default function Home() {
         ];
         selectedType = preferredTypes.find((t) => MediaRecorder.isTypeSupported(t)) || "";
         console.log('📹 Selected WebM format for conversion:', selectedType);
+        console.log('⚠️ Important: Railway API requires actual WebM content, not just WebM MIME type');
       } else {
         console.log('🎯 Direct recording, trying MP4 first');
         // Try MP4 first, fallback to WebM

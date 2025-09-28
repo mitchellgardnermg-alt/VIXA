@@ -14,8 +14,25 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
     throw new Error(`Invalid file type: ${file.type}. Only video files are supported.`);
   }
   
+  // Create a proper WebM file for Railway API
+  // Railway API is very strict about file format - it must be actual WebM content
+  const fileBuffer = await file.arrayBuffer();
+  const webmBlob = new Blob([fileBuffer], { type: 'video/webm' });
+  
+  // Create a new File object with proper WebM naming and MIME type
+  const webmFile = new File([webmBlob], 'vixa-recording.webm', { 
+    type: 'video/webm',
+    lastModified: Date.now()
+  });
+  
+  console.log('Created WebM file for Railway API:', {
+    name: webmFile.name,
+    size: webmFile.size,
+    type: webmFile.type
+  });
+  
   const formData = new FormData();
-  formData.append('video', file);
+  formData.append('video', webmFile);
   
   console.log('Sending request to:', `${VIDEO_ENCODING_API_URL}/convert`);
   
