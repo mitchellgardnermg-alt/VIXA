@@ -65,25 +65,43 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
       throw new Error(`Railway API conversion failed: ${response.status} ${errorText}`);
     }
     
-    const result = await response.json();
-    console.log('Railway API result:', result);
+    // Check if Railway returned the file directly (MP4 content)
+    const contentType = response.headers.get('content-type');
+    console.log('Railway API response content-type:', contentType);
+    
+    if (contentType?.includes('video/mp4')) {
+      console.log('Railway API returned MP4 file directly');
+      const arrayBuffer = await response.arrayBuffer();
+      console.log('Direct MP4 response size:', arrayBuffer.byteLength);
+      
+      // Validate that we got an actual MP4 file
+      const buffer = Buffer.from(arrayBuffer);
+      const mp4Signature = buffer.toString('hex', 0, 4);
+      console.log('Direct MP4 file signature:', mp4Signature);
+      
+      return buffer;
+    }
+    
+    // Try to parse as JSON for download URL
+    let result;
+    try {
+      const responseText = await response.text();
+      console.log('Railway API response text:', responseText);
+      result = JSON.parse(responseText);
+      console.log('Railway API parsed result:', result);
+    } catch (parseError) {
+      console.error('Failed to parse Railway API response as JSON:', parseError);
+      throw new Error('Railway API returned invalid response format');
+    }
     
     if (!result.success) {
       throw new Error(`Conversion failed: ${result.message}`);
     }
     
-    // Check if Railway actually converted the file
+    // Check if Railway provided a download URL
     if (!result.downloadUrl && !result.download_url && !result.url) {
-      console.log('No download URL in response, checking if file was processed...');
-      
-      // If Railway processed the file but didn't provide a download URL,
-      // it might have returned the converted file directly in the response
-      if (response.headers.get('content-type')?.includes('video/mp4')) {
-        console.log('Response contains MP4 content directly');
-        const arrayBuffer = await response.arrayBuffer();
-        console.log('Direct MP4 response size:', arrayBuffer.byteLength);
-        return Buffer.from(arrayBuffer);
-      }
+      console.log('No download URL in response, Railway may have processed file differently');
+      throw new Error('Railway API did not provide download URL');
     }
     
     // Download the converted file
