@@ -44,6 +44,8 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
   
   const formData = new FormData();
   formData.append('video', webmFile);
+  formData.append('output_format', 'mp4');
+  formData.append('quality', 'high');
   
   console.log('Sending request to:', `${VIDEO_ENCODING_API_URL}/convert`);
   
@@ -78,6 +80,12 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
       const buffer = Buffer.from(arrayBuffer);
       const mp4Signature = buffer.toString('hex', 0, 4);
       console.log('Direct MP4 file signature:', mp4Signature);
+      
+      // Check if this is actually an MP4 file or just WebM with wrong content-type
+      if (mp4Signature === '1a45dfa3' || mp4Signature === '18538086') {
+        console.warn('Warning: File appears to be WebM (Matroska) not MP4');
+        console.log('First 16 bytes:', buffer.toString('hex', 0, 16));
+      }
       
       return buffer;
     }

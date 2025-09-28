@@ -240,8 +240,21 @@ export default function Home() {
         convertedSize: result.size,
         type: result.type
       });
-      setConversionProgress(100);
       
+      // Check if Railway actually converted the file
+      if (result.type.includes('webm') && convertToMp4) {
+        console.warn('⚠️ Railway returned WebM file instead of MP4 - conversion may not be working');
+        console.log('Falling back to original WebM file');
+        
+        // Return the original WebM file instead of the "converted" WebM
+        const originalBuffer = Buffer.from(await compressedBlob.arrayBuffer());
+        const originalWebMBlob = new Blob([originalBuffer], { type: 'video/webm' });
+        
+        setConversionProgress(100);
+        return originalWebMBlob;
+      }
+      
+      setConversionProgress(100);
       return result;
     }
 
