@@ -14,11 +14,14 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
     throw new Error(`Invalid file type: ${file.type}. Only video files are supported.`);
   }
   
-  // Send the file directly to Railway API
+  // Send the file directly to Railway API with proper parameters
   const formData = new FormData();
   formData.append('video', file);
+  formData.append('output_format', 'mp4');
+  formData.append('quality', 'high');
   
   console.log('Sending request to:', `${VIDEO_ENCODING_API_URL}/convert`);
+  console.log('FormData contents:', Array.from(formData.entries()).map(([key, value]) => [key, value instanceof File ? `${value.name} (${value.size} bytes)` : value]));
   
   try {
     const response = await fetch(`${VIDEO_ENCODING_API_URL}/convert`, {
@@ -92,8 +95,23 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
       throw new Error('Railway API returned invalid response format');
     }
     
-    if (!result.success) {
-      throw new Error(`Conversion failed: ${result.message}`);
+    if (!result.success && !result.ok) {
+      throw new Error(`Conversion failed: ${result.message || 'Unknown error'}`);
+    }
+    
+    // Check if Railway actually converted the file by comparing sizes
+    if (result.convertedSize && result.originalSize) {
+      console.log('Railway size comparison:', {
+        originalSize: result.originalSize,
+        convertedSize: result.convertedSize,
+        type: result.type
+      });
+      
+      // If sizes are identical and type is still WebM, Railway didn't convert
+      if (result.convertedSize === result.originalSize && result.type === 'video/webm') {
+        console.warn('⚠️ Railway returned identical file sizes and WebM type - no conversion occurred');
+        throw new Error('Railway API did not perform conversion - returned original file');
+      }
     }
     
     // Check if Railway provided a download URL
@@ -129,14 +147,24 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
     // Validate that we got an actual MP4 file
     const buffer = Buffer.from(arrayBuffer);
     const mp4Signature = buffer.toString('hex', 0, 4);
-    console.log('File signature (first 4 bytes):', mp4Signature);
+    console.log('Downloaded file signature (first 4 bytes):', mp4Signature);
+    console.log('Downloaded file size:', buffer.length);
     
     // Check for MP4 file signature (ftyp box)
     if (mp4Signature !== '66747970' && !buffer.toString('ascii', 4, 8).includes('mp4')) {
-      console.warn('Warning: Downloaded file does not appear to be a valid MP4');
+      console.warn('⚠️ Downloaded file does not appear to be a valid MP4');
       console.log('File starts with:', buffer.toString('hex', 0, 16));
+      
+      // Check if it's WebM instead
+      if (mp4Signature === '1a45dfa3' || mp4Signature === '18538086') {
+        console.error('❌ Downloaded file is WebM, not MP4 - Railway conversion failed');
+        throw new Error('Railway API returned WebM file instead of converted MP4');
+      }
+      
+      throw new Error('Downloaded file is not a valid MP4 format');
     }
     
+    console.log('✅ Successfully downloaded valid MP4 file from Railway');
     return buffer;
   } catch (error) {
     console.error('Railway API conversion error:', error);
