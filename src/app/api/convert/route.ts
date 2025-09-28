@@ -14,38 +14,9 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
     throw new Error(`Invalid file type: ${file.type}. Only video files are supported.`);
   }
   
-  // Create a proper WebM file for Railway API
-  // Railway API is very strict about file format - it must be actual WebM content
-  const fileBuffer = await file.arrayBuffer();
-  const webmBlob = new Blob([fileBuffer], { type: 'video/webm' });
-  
-  // Generate UUID-style filename like the working example
-  const generateUUID = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  };
-  
-  const uuidFilename = `${generateUUID()}.webm`;
-  
-  // Create a new File object with proper WebM naming and MIME type
-  const webmFile = new File([webmBlob], uuidFilename, { 
-    type: 'video/webm',
-    lastModified: Date.now()
-  });
-  
-  console.log('Created WebM file for Railway API:', {
-    name: webmFile.name,
-    size: webmFile.size,
-    type: webmFile.type
-  });
-  
+  // Send the file directly to Railway API
   const formData = new FormData();
-  formData.append('video', webmFile);
-  formData.append('output_format', 'mp4');
-  formData.append('quality', 'high');
+  formData.append('video', file);
   
   console.log('Sending request to:', `${VIDEO_ENCODING_API_URL}/convert`);
   
