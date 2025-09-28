@@ -182,12 +182,25 @@ export default function Home() {
       });
     }
 
-    // Server-side conversion to MP4 using Cloudinary with progress tracking
+    // Server-side conversion to MP4 using Railway API with progress tracking
     async function convertToMp4Blob(webmBlob: Blob): Promise<Blob> {
+      console.log('🎬 Starting video conversion process...');
+      console.log('📁 Original file:', {
+        size: webmBlob.size,
+        type: webmBlob.type,
+        sizeMB: (webmBlob.size / 1024 / 1024).toFixed(2)
+      });
+      
       setConversionProgress(10);
+      console.log('📊 Progress: 10% - Starting compression...');
       
       // Compress video before upload
       const compressedBlob = await compressVideo(webmBlob, 0.6);
+      console.log('🗜️ Compression complete:', {
+        originalSize: webmBlob.size,
+        compressedSize: compressedBlob.size,
+        compressionRatio: ((1 - compressedBlob.size / webmBlob.size) * 100).toFixed(1) + '%'
+      });
       setConversionProgress(30);
       
       const formData = new FormData();
@@ -195,6 +208,11 @@ export default function Home() {
       formData.append('width', exportWidth.toString());
       formData.append('height', exportHeight.toString());
       
+      console.log('📤 Sending to conversion API:', {
+        width: exportWidth,
+        height: exportHeight,
+        fileSize: compressedBlob.size
+      });
       setConversionProgress(50);
       
       const response = await fetch('/api/convert', {
@@ -202,33 +220,62 @@ export default function Home() {
         body: formData,
       });
       
+      console.log('📡 API Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+      
       setConversionProgress(80);
       
       if (!response.ok) {
-        throw new Error(`Conversion failed: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ Conversion failed:', errorText);
+        throw new Error(`Conversion failed: ${response.status} - ${errorText}`);
       }
       
       const result = await response.blob();
+      console.log('✅ Conversion successful:', {
+        originalSize: compressedBlob.size,
+        convertedSize: result.size,
+        type: result.type
+      });
       setConversionProgress(100);
       
       return result;
     }
 
     async function startRecording() {
+      console.log('🎥 Starting recording process...');
       const canvas = canvasRef.current;
       const audioStream = getOutputStream();
-      if (!canvas || !audioStream) return;
+      if (!canvas || !audioStream) {
+        console.error('❌ Recording failed: Missing canvas or audio stream');
+        return;
+      }
+      
+      console.log('📐 Recording settings:', {
+        exportWidth,
+        exportHeight,
+        exportFps,
+        aspectRatio
+      });
+      
       // Switch to export resolution before capture
       setIsRecording(true);
+      console.log('🔴 Recording started');
       await new Promise(requestAnimationFrame);
       // Use selected FPS for export
       const canvasStream = canvas.captureStream(Math.max(1, Math.min(120, exportFps)));
       const audioTracks = audioStream.getAudioTracks();
       audioTracks.forEach((t) => canvasStream.addTrack(t));
+      
+      console.log('🎵 Audio tracks added:', audioTracks.length);
 
       // Choose recording format based on convertToMp4 setting
       let selectedType: string;
       if (convertToMp4) {
+        console.log('🎯 MP4 conversion enabled, selecting WebM format for conversion');
         // Use best supported format for conversion
         const preferredTypes = [
           "video/webm;codecs=vp9,opus",
@@ -236,68 +283,118 @@ export default function Home() {
           "video/webm"
         ];
         selectedType = preferredTypes.find((t) => MediaRecorder.isTypeSupported(t)) || "";
+        console.log('📹 Selected WebM format for conversion:', selectedType);
       } else {
+        console.log('🎯 Direct recording, trying MP4 first');
         // Try MP4 first, fallback to WebM
         if (MediaRecorder.isTypeSupported("video/mp4;codecs=h264,aac")) {
           selectedType = "video/mp4;codecs=h264,aac";
+          console.log('✅ MP4 format supported');
         } else {
+          console.log('⚠️ MP4 not supported, falling back to WebM');
           const webmTypes = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
           selectedType = webmTypes.find((t) => MediaRecorder.isTypeSupported(t)) || "";
+          console.log('📹 Selected WebM format:', selectedType);
         }
       }
       
       if (!selectedType) {
+        console.error('❌ No supported recording format found');
         setIsRecording(false);
         alert("No supported recording format found in this browser.");
         return;
       }
+      
+      console.log('🎬 Final recording format:', selectedType);
 
       const mr = new MediaRecorder(canvasStream, {
         mimeType: selectedType,
         videoBitsPerSecond: 8_000_000,
         audioBitsPerSecond: 192_000,
       });
+      
+      console.log('🎙️ MediaRecorder configured:', {
+        mimeType: selectedType,
+        videoBitsPerSecond: 8_000_000,
+        audioBitsPerSecond: 192_000
+      });
+      
       recordedChunksRef.current = [];
-      mr.ondataavailable = (e) => { if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data); };
+      mr.ondataavailable = (e) => { 
+        if (e.data && e.data.size > 0) {
+          recordedChunksRef.current.push(e.data);
+          console.log('📦 Data chunk received:', e.data.size, 'bytes');
+        }
+      };
       mr.onstop = async () => {
+        console.log('⏹️ Recording stopped, processing chunks...');
         const blob = new Blob(recordedChunksRef.current, { type: mr.mimeType });
+        
+        console.log('📁 Recording complete:', {
+          size: blob.size,
+          type: blob.type,
+          sizeMB: (blob.size / 1024 / 1024).toFixed(2),
+          chunks: recordedChunksRef.current.length
+        });
         
         // Show preview instead of immediate download
         setPreviewBlob(blob);
         setShowPreview(true);
         setIsRecording(false);
+        console.log('👀 Preview modal opened');
       };
       mr.start(250);
       mediaRecorderRef.current = mr;
+      console.log('▶️ MediaRecorder started with 250ms intervals');
     }
 
     function stopRecording() {
+      console.log('🛑 Stopping recording...');
       mediaRecorderRef.current?.stop();
       setIsRecording(false);
+      console.log('⏹️ Recording stopped');
     }
 
     // Export the preview video
     async function exportVideo() {
-      if (!previewBlob) return;
+      if (!previewBlob) {
+        console.error('❌ No preview blob available for export');
+        return;
+      }
+      
+      console.log('📤 Starting export process...');
+      console.log('📁 Preview blob details:', {
+        size: previewBlob.size,
+        type: previewBlob.type,
+        sizeMB: (previewBlob.size / 1024 / 1024).toFixed(2)
+      });
       
       // Check subscription limits
       if (!canExport()) {
+        console.log('🚫 Export limit reached, showing pricing modal');
         setShowPricing(true);
         return;
       }
       
+      console.log('✅ Export allowed, proceeding...');
+      
       try {
         setIsRemuxing(true);
+        console.log('🔄 Export processing started');
         
         if (convertToMp4 && !previewBlob.type.includes('mp4')) {
+          console.log('🎬 MP4 conversion requested, starting conversion...');
           const convertedBlob = await convertToMp4Blob(previewBlob);
+          console.log('✅ Conversion complete, downloading MP4...');
           const url = URL.createObjectURL(convertedBlob);
           const a = document.createElement("a");
           a.href = url;
           a.download = `vixa-recording.mp4`;
           a.click();
           URL.revokeObjectURL(url);
+          console.log('📥 MP4 download initiated');
         } else {
+          console.log('📥 Direct download (no conversion needed)');
           // Direct download
           const url = URL.createObjectURL(previewBlob);
           const a = document.createElement("a");
@@ -306,18 +403,22 @@ export default function Home() {
           a.download = `vixa-recording.${ext}`;
           a.click();
           URL.revokeObjectURL(url);
+          console.log(`📥 ${ext.toUpperCase()} download initiated`);
         }
         
         // Increment usage counter
         incrementExportUsage();
+        console.log('📊 Export usage incremented');
         
         // Close preview
         setShowPreview(false);
         setPreviewBlob(null);
+        console.log('👀 Preview modal closed');
       } catch (error) {
-        console.error('Export failed:', error);
+        console.error('❌ Export failed:', error);
       } finally {
         setIsRemuxing(false);
+        console.log('🔄 Export processing finished');
       }
     }
 
