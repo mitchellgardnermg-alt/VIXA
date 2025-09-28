@@ -24,7 +24,7 @@ export default function Home() {
   const router = useRouter();
 
   // App functionality (moved from /app page)
-  const { data, playMic, playFile, isPlaying, pause, resume, hasInput, getOutputStream } = useAudioAnalyser();
+  const { data, playMic, playFile, isPlaying, pause, resume, hasInput, getOutputStream, mediaElRef } = useAudioAnalyser();
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [palette] = useState(["#071923", "#00BBF9", "#00F5D4", "#E0FBFC"]);
   const logo = useAppStore((s) => s.logo);
@@ -78,6 +78,44 @@ export default function Home() {
     }
   }, [subscription, isSignedIn, setSubscription]);
 
+  // Audio player event listeners and controls
+  useEffect(() => {
+    const audioElement = mediaElRef.current;
+    if (!audioElement) return;
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(audioElement.currentTime);
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(audioElement.duration);
+      console.log('Audio metadata loaded:', {
+        duration: audioElement.duration,
+        readyState: audioElement.readyState
+      });
+    };
+
+    const handleEnded = () => {
+      setCurrentTime(0);
+      pause(); // Use the pause function from useAudioAnalyser
+    };
+    const handleAudioVolumeChange = () => {
+      setVolume(audioElement.volume);
+    };
+    // Add event listeners
+    audioElement.addEventListener('timeupdate', handleTimeUpdate);
+    audioElement.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audioElement.addEventListener('ended', handleEnded);
+    audioElement.addEventListener('volumechange', handleAudioVolumeChange);
+
+    // Cleanup
+    return () => {
+      audioElement.removeEventListener('timeupdate', handleTimeUpdate);
+      audioElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audioElement.removeEventListener('ended', handleEnded);
+      audioElement.removeEventListener('volumechange', handleAudioVolumeChange);
+    };
+  }, [mediaElRef]);
   const features = [
     {
       icon: <SpeakerLoudIcon className="h-6 w-6" />,
@@ -481,21 +519,24 @@ export default function Home() {
 
     const handleVolumeChange = (newVolume: number) => {
       setVolume(newVolume);
-      if (getOutputStream) {
-        getOutputStream().volume = newVolume;
+      if (mediaElRef.current) {
+        mediaElRef.current.volume = newVolume;
       }
     };
 
     const seekTo = (time: number) => {
-      setCurrentTime(time);
-      // TODO: Implement actual seeking
+      if (mediaElRef.current) {
+        mediaElRef.current.currentTime = time;
+        setCurrentTime(time);
+      }
     };
 
     const restartTrack = () => {
-      setCurrentTime(0);
-      // TODO: Implement actual restart
+      if (mediaElRef.current) {
+        mediaElRef.current.currentTime = 0;
+        setCurrentTime(0);
+      }
     };
-
     return (
       <div className="min-h-screen bg-[#0A0F0C] text-[#E6F1EE]">
         <header className="sticky top-0 z-10 px-4 pt-3 pb-2 bg-[rgba(10,12,11,0.8)] backdrop-blur-md border-b border-white/10">
