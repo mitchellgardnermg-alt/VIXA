@@ -60,27 +60,18 @@
    - Select events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
    - Copy webhook secret to Vercel environment variables
 
-### Step 4: Configure Cloudinary
+### Step 4: Configure Video Encoding API
 
-1. **Create Cloudinary Account**
-   - Go to [cloudinary.com](https://cloudinary.com) and create a free account
-   - Navigate to your Dashboard to get your credentials
+1. **Railway Video Encoding Service**
+   - The app uses Railway's video encoding service at `https://vea-production.up.railway.app`
+   - No additional configuration needed - the service is already set up
+   - Video conversion is handled automatically
 
-2. **Set Environment Variables in Vercel**
-   - Go to your Vercel project dashboard
-   - Navigate to Settings → Environment Variables
-   - Add the following variables:
-     ```
-     CLOUDINARY_CLOUD_NAME=your_cloud_name
-     CLOUDINARY_API_KEY=your_api_key  
-     CLOUDINARY_API_SECRET=your_api_secret
-     ```
-
-3. **Test Video Conversion**
+2. **Test Video Conversion**
    - Record a video in your app
    - Test the MP4 conversion
    - Verify it works correctly
-   - Check Cloudinary dashboard for uploaded videos
+   - The Railway service handles all video processing
 
 ## 🔧 Production Checklist
 
@@ -88,9 +79,7 @@
 - [ ] `STRIPE_SECRET_KEY` (live key)
 - [ ] `STRIPE_PUBLISHABLE_KEY` (live key)
 - [ ] `STRIPE_WEBHOOK_SECRET`
-- [ ] `CLOUDINARY_CLOUD_NAME`
-- [ ] `CLOUDINARY_API_KEY`
-- [ ] `CLOUDINARY_API_SECRET`
+- [ ] `VIDEO_ENCODING_API_URL` (defaults to Railway service)
 - [ ] `NEXT_PUBLIC_APP_URL` (your domain)
 - [ ] `REDIS_URL` (optional, for caching)
 
@@ -139,9 +128,9 @@
 - Test with Stripe CLI: `stripe listen --forward-to localhost:3000/api/stripe/webhook`
 
 **Video Conversion Issues**
-- Check Cloudinary credentials
+- Check Railway video encoding service status
 - Verify file size limits
-- Monitor Cloudinary usage
+- Monitor conversion performance
 
 ### Debug Mode
 ```bash
@@ -159,7 +148,7 @@ NODE_ENV=development npm run dev
 ### Monitoring
 - Check Vercel dashboard for build status
 - Monitor Stripe dashboard for payments
-- Track Cloudinary usage and costs
+- Track Railway video encoding service performance
 - Monitor Redis usage (if using)
 
 ## 💰 Cost Optimization
@@ -174,10 +163,10 @@ NODE_ENV=development npm run dev
 - No monthly fees
 - Monitor in Stripe dashboard
 
-### Cloudinary
-- Free tier: 25GB storage, 25GB bandwidth
-- Pro tier: $89/month for more resources
-- Monitor usage and optimize
+### Railway Video Encoding
+- Uses Railway's video encoding service
+- No additional costs for video processing
+- Service handles all video conversion automatically
 
 ### Redis (Optional)
 - Free tier: 30MB
@@ -194,11 +183,11 @@ NODE_ENV=development npm run dev
 ### Video Processing
 - Compress videos before upload
 - Use appropriate quality settings
-- Cache converted videos
+- Railway service handles all video processing
 
 ### CDN
 - Vercel provides global CDN
-- Cloudinary provides video CDN
+- Railway provides video processing CDN
 - Monitor performance metrics
 
 ## 📈 Scaling
@@ -206,12 +195,12 @@ NODE_ENV=development npm run dev
 ### When to Scale
 - 100+ daily users
 - 50+ exports per day
-- High Cloudinary usage
+- High video processing load
 - Slow conversion times
 
 ### Scaling Options
 1. **Vercel Pro**: More bandwidth and functions
-2. **Cloudinary Pro**: Higher limits and priority
+2. **Railway Pro**: Higher video processing limits
 3. **Redis Cloud**: Better caching
 4. **CDN**: Global content delivery
 

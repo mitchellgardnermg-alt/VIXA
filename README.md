@@ -7,7 +7,7 @@ A real-time audio-reactive visual application that transforms music into stunnin
 - **Real-time Audio Analysis** - Reacts to low, mid, and high frequencies
 - **Multiple Visual Modes** - Smoke, waveform, and more
 - **Social Media Ready** - Export in YouTube, TikTok, Instagram formats
-- **MP4 Conversion** - Cloudinary-powered video processing
+- **MP4 Conversion** - Railway-powered video processing
 - **Subscription Tiers** - Free, Pro, and Lifetime plans
 - **Preview System** - Review recordings before export
 
@@ -18,7 +18,7 @@ A real-time audio-reactive visual application that transforms music into stunnin
 - **Audio**: Web Audio API
 - **Graphics**: Canvas 2D API, Three.js
 - **Payments**: Stripe
-- **Video Processing**: Cloudinary
+- **Video Processing**: Railway Video Encoding API
 - **Authentication**: Clerk
 - **State Management**: Zustand
 
@@ -71,10 +71,10 @@ A real-time audio-reactive visual application that transforms music into stunnin
 4. Set up webhooks for subscription events
 5. See `stripe-setup.md` for detailed instructions
 
-### Cloudinary Setup
-1. Create a Cloudinary account at [cloudinary.com](https://cloudinary.com)
-2. Get your cloud name, API key, and API secret
-3. Update the configuration in `src/app/api/convert/route.ts`
+### Video Encoding Setup
+1. The app uses Railway's video encoding service at `https://vea-production.up.railway.app`
+2. No additional configuration needed - the service is already set up
+3. Video conversion is handled automatically by the Railway service
 
 ### Redis Setup (Optional)
 1. Install Redis locally: `brew install redis`
