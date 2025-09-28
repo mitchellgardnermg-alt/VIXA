@@ -32,6 +32,11 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
     console.log('Railway API response status:', response.status);
     console.log('Railway API response headers:', Object.fromEntries(response.headers.entries()));
     
+    // Log the raw response for debugging
+    const responseClone = response.clone();
+    const responseText = await responseClone.text();
+    console.log('Railway API raw response (first 200 chars):', responseText.substring(0, 200));
+    
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Railway API error response:', errorText);
@@ -42,23 +47,29 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
     const contentType = response.headers.get('content-type');
     console.log('Railway API response content-type:', contentType);
     
-    if (contentType?.includes('video/mp4')) {
-      console.log('Railway API returned MP4 file directly');
+    // If Railway returns video content, it might be the original file, not converted
+    if (contentType?.includes('video/')) {
+      console.log('Railway API returned video file directly');
       const arrayBuffer = await response.arrayBuffer();
-      console.log('Direct MP4 response size:', arrayBuffer.byteLength);
+      console.log('Direct video response size:', arrayBuffer.byteLength);
       
-      // Validate that we got an actual MP4 file
+      // Check if this is actually converted or just the original file
       const buffer = Buffer.from(arrayBuffer);
-      const mp4Signature = buffer.toString('hex', 0, 4);
-      console.log('Direct MP4 file signature:', mp4Signature);
+      const signature = buffer.toString('hex', 0, 4);
+      console.log('Video file signature:', signature);
       
-      // Check if this is actually an MP4 file or just WebM with wrong content-type
-      if (mp4Signature === '1a45dfa3' || mp4Signature === '18538086') {
-        console.warn('Warning: File appears to be WebM (Matroska) not MP4');
-        console.log('First 16 bytes:', buffer.toString('hex', 0, 16));
+      // Check if this is WebM (Matroska) - means no conversion happened
+      if (signature === '1a45dfa3' || signature === '18538086') {
+        console.warn('Warning: Railway returned WebM file - conversion may not have completed');
+        console.log('This suggests Railway is returning original file instead of converted MP4');
+        throw new Error('Railway API returned original WebM file instead of converted MP4');
       }
       
-      return buffer;
+      // If it's actually MP4, return it
+      if (signature === '66747970' || buffer.toString('ascii', 4, 8).includes('mp4')) {
+        console.log('Confirmed MP4 file from Railway');
+        return buffer;
+      }
     }
     
     // Try to parse as JSON for download URL
