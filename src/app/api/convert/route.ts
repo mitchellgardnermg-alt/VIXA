@@ -92,8 +92,16 @@ async function convertWithRailwayAPI(file: File): Promise<Buffer> {
       throw new Error('No download URL provided by Railway API');
     }
     
-    console.log('Downloading converted file from:', downloadUrl);
-    const downloadResponse = await fetch(downloadUrl);
+    // Ensure we're using the correct download endpoint format
+    let finalDownloadUrl = downloadUrl;
+    if (downloadUrl.startsWith('/download/')) {
+      finalDownloadUrl = `${VIDEO_ENCODING_API_URL}${downloadUrl}`;
+    } else if (!downloadUrl.startsWith('http')) {
+      finalDownloadUrl = `${VIDEO_ENCODING_API_URL}/download/${downloadUrl}`;
+    }
+    
+    console.log('Downloading converted file from:', finalDownloadUrl);
+    const downloadResponse = await fetch(finalDownloadUrl);
     if (!downloadResponse.ok) {
       throw new Error(`Failed to download converted video: ${downloadResponse.status}`);
     }
